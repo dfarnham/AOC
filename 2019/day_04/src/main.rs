@@ -3,7 +3,6 @@ use regex::Regex;
 use std::error::Error;
 use std::io::{self, Write};
 
-#[allow(clippy::type_complexity)]
 fn get_data(puzzle_lines: &[String], n: usize) -> Result<Vec<usize>, Box<dyn Error>> {
     trim_split_on::<usize>(&puzzle_lines[n], '-')
 }

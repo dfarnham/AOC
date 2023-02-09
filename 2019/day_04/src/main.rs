@@ -1,4 +1,5 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe, trim_split_on};
+use rayon::prelude::*;
 use regex::Regex;
 use std::error::Error;
 use std::io::{self, Write};
@@ -25,8 +26,10 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let (low, high) = (range[0], range[1]);
     let double_digit_re = Regex::new(r"00|11|22|33|44|55|66|77|88|99").unwrap();
 
-    // return filtered count
     Ok((low..high)
+        .collect::<Vec<_>>()
+        // process in parallel
+        .par_iter()
         // string representation of the integer
         .map(|n| n.to_string())
         // the string has to contain a doubled digit
@@ -56,6 +59,9 @@ fn part1_contains(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 
     // return filtered count
     Ok((low..high)
+        .collect::<Vec<_>>()
+        // process in parallel
+        .par_iter()
         // string representation of the integer
         .map(|n| n.to_string())
         // the string has to contain a doubled digit
@@ -84,6 +90,9 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 
     // return filtered count
     Ok((low..high)
+        .collect::<Vec<_>>()
+        // process in parallel
+        .par_iter()
         // string representation of the integer
         .map(|n| n.to_string())
         // the string must contain a doubled digit which isn't a subset of a larger sequence

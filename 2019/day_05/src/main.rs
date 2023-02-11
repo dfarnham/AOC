@@ -43,8 +43,10 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                 };
 
                 if opcode == 5 {
+                    // instruction pointer set to second param or increases by 3
                     i = if a != 0 { b as usize } else { i + 3 }
                 } else if opcode == 6 {
+                    // instruction pointer set to second param or increases by 3
                     i = if a == 0 { b as usize } else { i + 3 }
                 } else {
                     // third param: destination index
@@ -58,20 +60,24 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                         _ => panic!("wtf"),
                     };
 
-                    // instruction pointer moves by 4
+                    // instruction pointer increases by 4
                     i += 4;
                 }
             }
-            3 => {
-                // set supplied input at the next param (index)
+            3 | 4 => {
+                // first param
                 let a = opcodes[i + 1] as usize;
-                opcodes[a] = input;
-                i += 2;
-            }
-            4 => {
-                // output value at the next param (index)
-                result = opcodes[opcodes[i + 1] as usize];
-                println!("{result}");
+
+                if opcode == 3 {
+                    // set supplied input at param (index)
+                    opcodes[a] = input;
+                } else {
+                    // output value at param (index)
+                    result = opcodes[a];
+                    println!("{result}");
+                }
+
+                // instruction pointer increases by 2
                 i += 2;
             }
             _ => return Err("invalid opcode".into()),

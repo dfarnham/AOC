@@ -17,7 +17,7 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
         // there is no bounds checking on indexing opcodes
         // ***********************************************
 
-        // skip the 2 digit instruction and gather all modes the modes are listed R->L
+        // skip the 2 digit instruction and gather all modes (modes are listed R->L)
         let mut modes = vec![];
         let mut n = 10000 + opcodes[i] / 100;
         while n > 0 {

@@ -1,41 +1,35 @@
-use general::{get_args, read_trimmed_data_lines, reset_sigpipe, trim_split_on};
+use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
 use std::collections::HashMap;
 use std::error::Error;
 use std::io::{self, Write};
 
 fn get_data(puzzle_lines: &[String]) -> Result<HashMap<String, String>, Box<dyn Error>> {
-    let mut dependencies = HashMap::new();
-    for line in puzzle_lines {
-        let planets = trim_split_on::<String>(line, ')')?;
-        dependencies.insert(planets[1].to_owned(), planets[0].to_owned());
-    }
-    Ok(dependencies)
+    Ok(puzzle_lines
+        .iter()
+        .map(|line| line.split(')').collect::<Vec<_>>())
+        .map(|pair| (pair[1].trim().into(), pair[0].trim().into()))
+        .collect())
 }
 
-fn path_to_planet(src: &str, dst: &str, dependencies: &HashMap<String, String>) -> Vec<String> {
+fn path_to_planet(src: &str, dst: &str, deps: &HashMap<String, String>) -> Vec<String> {
     let mut path = vec![];
     let mut src = src;
     while src != dst {
-        let new_src = dependencies.get(src).unwrap_or_else(|| panic!("invalid key: {src}"));
-        path.push(new_src.into());
-        src = new_src;
+        path.push(deps.get(src).unwrap_or_else(|| panic!("invalid key: {src}")).to_owned());
+        src = &path[path.len() - 1];
     }
     path
 }
 
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let dependencies = get_data(puzzle_lines)?;
-    Ok(dependencies
-        .keys()
-        .map(|k| path_to_planet(k, "COM", &dependencies).len())
-        .sum())
+    let deps = get_data(puzzle_lines)?;
+    Ok(deps.keys().map(|p| path_to_planet(p, "COM", &deps).len()).sum())
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let dependencies = get_data(puzzle_lines)?;
-    let you = path_to_planet("YOU", "COM", &dependencies);
-    let san = path_to_planet("SAN", "COM", &dependencies);
-    for (i, planet) in san.iter().enumerate() {
+    let deps = get_data(puzzle_lines)?;
+    let you = path_to_planet("YOU", "COM", &deps);
+    for (i, planet) in path_to_planet("SAN", "COM", &deps).iter().enumerate() {
         if let Some(index) = you.iter().position(|p| p.as_str() == planet) {
             return Ok(index + i);
         }

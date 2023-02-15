@@ -28,8 +28,8 @@ fn part1(puzzle_lines: &[String], rows: usize, columns: usize) -> Result<usize, 
 
     // find the layer with smallest count of '0', then return
     // the count of '1' multiplied by the count of '2' in that layer
-    Ok(match layers.iter().min_by(|a, b| a.1.get(&'0').cmp(&b.1.get(&'0'))) {
-        Some(layer) => layer.1.get(&'1').unwrap_or(&0) * layer.1.get(&'2').unwrap_or(&0),
+    Ok(match layers.values().min_by(|a, b| a.get(&'0').cmp(&b.get(&'0'))) {
+        Some(layer) => layer.get(&'1').unwrap_or(&0) * layer.get(&'2').unwrap_or(&0),
         None => panic!("no solution"),
     })
 }

@@ -11,48 +11,48 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
     let mut opcodes = program.to_owned();
 
     let mut result = 0;
-    let mut i = 0;
-    while i < opcodes.len() && opcodes[i] != 99 {
+    let mut inst_ptr = 0;
+    while opcodes[inst_ptr] != 99 {
         // ***********************************************
         // there is no bounds checking on indexing opcodes
         // ***********************************************
 
         // skip the 2 digit instruction and gather all modes (modes are listed R->L)
         let mut modes = vec![];
-        let mut n = 10000 + opcodes[i] / 100;
+        let mut n = 10000 + opcodes[inst_ptr] / 100;
         while n > 0 {
             modes.push(n % 10);
             n /= 10;
         }
 
         // the numeric opcode
-        let opcode = opcodes[i] % 100;
+        let opcode = opcodes[inst_ptr] % 100;
 
         match opcode {
             1 | 2 | 5 | 6 | 7 | 8 => {
                 // first param value
                 let a = match modes[0] {
-                    0 => opcodes[opcodes[i + 1] as usize],
-                    1 => opcodes[i + 1],
+                    0 => opcodes[opcodes[inst_ptr + 1] as usize],
+                    1 => opcodes[inst_ptr + 1],
                     _ => panic!("opcode = {opcode}, modes = {modes:?}"),
                 };
 
                 // second param value
                 let b = match modes[1] {
-                    0 => opcodes[opcodes[i + 2] as usize],
-                    1 => opcodes[i + 2],
+                    0 => opcodes[opcodes[inst_ptr + 2] as usize],
+                    1 => opcodes[inst_ptr + 2],
                     _ => panic!("opcode = {opcode}, modes = {modes:?}"),
                 };
 
                 if opcode == 5 {
                     // instruction pointer set to second param or increases by 3
-                    i = if a != 0 { b as usize } else { i + 3 }
+                    inst_ptr = if a != 0 { b as usize } else { inst_ptr + 3 }
                 } else if opcode == 6 {
                     // instruction pointer set to second param or increases by 3
-                    i = if a == 0 { b as usize } else { i + 3 }
+                    inst_ptr = if a == 0 { b as usize } else { inst_ptr + 3 }
                 } else {
                     // third param: destination index
-                    let index = opcodes[i + 3] as usize;
+                    let index = opcodes[inst_ptr + 3] as usize;
 
                     opcodes[index] = match opcode {
                         1 => a + b,
@@ -63,12 +63,12 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                     };
 
                     // instruction pointer increases by 4
-                    i += 4;
+                    inst_ptr += 4;
                 }
             }
             3 | 4 => {
                 // first param value
-                let index = opcodes[i + 1] as usize;
+                let index = opcodes[inst_ptr + 1] as usize;
 
                 if opcode == 3 {
                     // set supplied input at param (index)
@@ -77,14 +77,14 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                     // result, output value at first param index
                     result = match modes[0] {
                         0 => opcodes[index],
-                        1 => opcodes[i + 1],
+                        1 => opcodes[inst_ptr + 1],
                         _ => panic!("opcode = {opcode}, modes = {modes:?}")
                     };
                     println!("{result}");
                 }
 
                 // instruction pointer increases by 2
-                i += 2;
+                inst_ptr += 2;
             }
             _ => return Err(format!("invalid opcode: {opcode}").into()),
         }

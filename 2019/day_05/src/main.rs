@@ -30,16 +30,18 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
 
         match opcode {
             1 | 2 | 5 | 6 | 7 | 8 => {
-                // first param
-                let a = match modes[0] == 1 {
-                    true => opcodes[i + 1],
-                    false => opcodes[opcodes[i + 1] as usize],
+                // first param value
+                let a = match modes[0] {
+                    0 => opcodes[opcodes[i + 1] as usize],
+                    1 => opcodes[i + 1],
+                    _ => panic!("opcode = {opcode}, modes = {modes:?}"),
                 };
 
-                // second param
-                let b = match modes[1] == 1 {
-                    true => opcodes[i + 2],
-                    false => opcodes[opcodes[i + 2] as usize],
+                // second param value
+                let b = match modes[1] {
+                    0 => opcodes[opcodes[i + 2] as usize],
+                    1 => opcodes[i + 2],
+                    _ => panic!("opcode = {opcode}, modes = {modes:?}"),
                 };
 
                 if opcode == 5 {
@@ -50,9 +52,9 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                     i = if a == 0 { b as usize } else { i + 3 }
                 } else {
                     // third param: destination index
-                    let c = opcodes[i + 3] as usize;
+                    let index = opcodes[i + 3] as usize;
 
-                    opcodes[c] = match opcode {
+                    opcodes[index] = match opcode {
                         1 => a + b,
                         2 => a * b,
                         7 => if a < b { 1 } else { 0 },
@@ -65,25 +67,30 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                 }
             }
             3 | 4 => {
-                // first param
-                let a = opcodes[i + 1] as usize;
+                // first param value
+                let index = opcodes[i + 1] as usize;
 
                 if opcode == 3 {
                     // set supplied input at param (index)
-                    opcodes[a] = input;
+                    opcodes[index] = input;
                 } else {
-                    // output value at param (index)
-                    result = opcodes[a];
+                    // result, output value at first param index
+                    result = match modes[0] {
+                        0 => opcodes[index],
+                        1 => opcodes[i + 1],
+                        _ => panic!("opcode = {opcode}, modes = {modes:?}")
+                    };
                     println!("{result}");
                 }
 
                 // instruction pointer increases by 2
                 i += 2;
             }
-            _ => return Err("invalid opcode".into()),
+            _ => return Err(format!("invalid opcode: {opcode}").into()),
         }
     }
 
+    // return last stored result
     Ok(result)
 }
 

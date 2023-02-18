@@ -6,42 +6,51 @@ fn get_data(puzzle_lines: &[String]) -> Result<Vec<usize>, Box<dyn Error>> {
     trim_split_on(&puzzle_lines[0], ',')
 }
 
-fn run_program(opcodes: &[usize], noun: usize, verb: usize) -> Result<usize, Box<dyn Error>> {
+fn run_program(opcodes: &[usize]) -> Result<usize, Box<dyn Error>> {
     let mut opcodes = opcodes.to_owned();
 
-    // before running the program, replace position 1 with the value 12
-    // and replace position 2 with the value 2.
-    // What value is left at position 0 after the program halts?
-    // In this program, the value placed in address 1 is called the noun,
-    // and the value placed in address 2 is called the verb.
-
-    // no bounds checking
-    opcodes[1] = noun;
-    opcodes[2] = verb;
     let mut i = 0;
     while opcodes[i] != 99 {
         let (a, b, c) = (opcodes[i + 1], opcodes[i + 2], opcodes[i + 3]);
+
+        // Opcode 1,2 either add or multiply numbers read from
+        // two positions and stores the result in a third position.
         opcodes[c] = match opcodes[i] {
             1 => opcodes[a] + opcodes[b],
             2 => opcodes[a] * opcodes[b],
             n => panic!("invalid opcode: {n}"),
         };
+
+        // move the instruction pointer forward by 4 positions
         i += 4;
     }
+
+    // What value is left at position 0 after the program halts?
     Ok(opcodes[0])
 }
 
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let opcodes = get_data(puzzle_lines)?;
-    run_program(&opcodes, 12, 2)
+    let mut opcodes = get_data(puzzle_lines)?;
+    opcodes[1] = 12;
+    opcodes[2] = 2;
+    run_program(&opcodes)
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let opcodes = get_data(puzzle_lines)?;
+    let mut opcodes = get_data(puzzle_lines)?;
 
     for noun in 0..99 {
         for verb in 0..99 {
-            if run_program(&opcodes, noun, verb)? == 19690720 {
+            // before running the program, replace position 1 with the value 12
+            // and replace position 2 with the value 2.
+            // What value is left at position 0 after the program halts?
+            // In this program, the value placed in address 1 is called the noun,
+            // and the value placed in address 2 is called the verb.
+
+            // no bounds checking
+            opcodes[1] = noun;
+            opcodes[2] = verb;
+            if run_program(&opcodes)? == 19690720 {
                 return Ok(100 * noun + verb);
             }
         }

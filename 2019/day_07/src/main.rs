@@ -35,8 +35,8 @@ fn run_program(program: &[i64], input_phases: &Vec<usize>, feedback: bool) -> Re
 
             // skip the 2 digit instruction and gather all modes (modes are listed R->L)
             let mut modes = vec![];
-            let mut n = 10000 + opcodes[inst_ptr] / 100;
-            while n > 0 {
+            let mut n = 1000 + opcodes[inst_ptr] / 100;
+            for _ in 0..3 {
                 modes.push(n % 10);
                 n /= 10;
             }
@@ -44,14 +44,14 @@ fn run_program(program: &[i64], input_phases: &Vec<usize>, feedback: bool) -> Re
             // the numeric opcode
             let opcode = opcodes[inst_ptr] % 100;
 
+            // first param value is needed by most opcodes
+            let a = match modes[0] == 1 {
+                true => opcodes[inst_ptr + 1],
+                false => opcodes[opcodes[inst_ptr + 1] as usize],
+            };
+
             match opcode {
                 1 | 2 | 5 | 6 | 7 | 8 => {
-                    // first param
-                    let a = match modes[0] == 1 {
-                        true => opcodes[inst_ptr + 1],
-                        false => opcodes[opcodes[inst_ptr + 1] as usize],
-                    };
-
                     // second param
                     let b = match modes[1] == 1 {
                         true => opcodes[inst_ptr + 2],
@@ -81,15 +81,15 @@ fn run_program(program: &[i64], input_phases: &Vec<usize>, feedback: bool) -> Re
                     }
                 }
                 3 | 4 => {
-                    // first param
-                    let a = opcodes[inst_ptr + 1] as usize;
+                    // first param: destination index
+                    let index = opcodes[inst_ptr + 1] as usize;
 
                     // instruction pointer increases by 2
                     inst_ptr += 2;
 
                     if opcode == 3 {
                         // input the current signal or initialize
-                        opcodes[a] = match phase_init.contains(&phase) {
+                        opcodes[index] = match phase_init.contains(&phase) {
                             true => shared_signal,
                             false => {
                                 phase_init.insert(phase);
@@ -98,7 +98,7 @@ fn run_program(program: &[i64], input_phases: &Vec<usize>, feedback: bool) -> Re
                         };
                     } else {
                         // output value at param (index)
-                        shared_signal = opcodes[a];
+                        shared_signal = a;
 
                         // the amplifiers are just a work queue, they suspend
                         // their work state and go to the end of the queue,

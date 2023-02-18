@@ -33,21 +33,61 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
         // the numeric opcode
         let opcode = opcodes[&inst_ptr] % 100;
 
+        // Opcode 1,2 either add or multiply numbers read from
+        // two positions and stores the result in a third position.
+        //
+        // Opcode 3 takes a single integer as input and saves
+        // it to the position given by its only parameter.
+        //
+        // Opcode 4 outputs the value of its only parameter.
+        // 
+        // Opcode 5 is jump-if-true, if the first parameter is non-zero,
+        // it sets the instruction pointer to the value from the second parameter.
+        // Otherwise, it does nothing.
+        //
+        // Opcode 6 is jump-if-false, if the first parameter is zero, it sets
+        // the instruction pointer to the value from the second parameter.
+        // Otherwise, it does nothing.
+        //
+        // Opcode 7 is less than: if the first parameter is less than the second
+        // parameter, it stores 1 in the position given by the third parameter.
+        // Otherwise, it stores 0.
+        //
+        // Opcode 8 is equals: if the first parameter is equal to the second
+        // parameter, it stores 1 in the position given by the third parameter.
+        // Otherwise, it stores 0.
+        //
+        // Opcode 9 adjusts the relative base by the value of its only parameter.
+        // The relative base increases (or decreases, if the value is negative)
+        // by the value of the parameter.
+        // 
+        // Parameter modes:
+        //   0 - position mode - the parameter to be interpreted as a position
+        //
+        //   1 - immediate mode - the parameter is interpreted as a value
+        //
+        //   2 - relative mode - use offset from relative base,
+        //                       the parameter is interpreted as a position.
+        //
+        // Memory: Memory beyond the initial program starts with the
+        //         value 0 and can be read or written like any other memory.
+        //         (It is invalid to try to access memory at a negative address, though.)
+
         // parameters
         let param_1 = *opcodes.entry(inst_ptr + 1).or_default();
         let param_2 = *opcodes.entry(inst_ptr + 2).or_default();
         let param_3 = *opcodes.entry(inst_ptr + 3).or_default();
 
+        // first param value is needed by most opcodes
+        let a = match modes[0] {
+            0 => *opcodes.entry(param_1).or_default(),
+            1 => param_1,
+            2 => *opcodes.entry(param_1 + relative_base).or_default(),
+            _ => panic!("opcode = {opcode}, modes = {modes:?}"),
+        };
+
         match opcode {
             1 | 2 | 5 | 6 | 7 | 8 => {
-                // first param value
-                let a = match modes[0] {
-                    0 => *opcodes.entry(param_1).or_default(),
-                    1 => param_1,
-                    2 => *opcodes.entry(param_1 + relative_base).or_default(),
-                    _ => panic!("opcode = {opcode}, modes = {modes:?}"),
-                };
-
                 // second param value
                 let b = match modes[1] {
                     0 => *opcodes.entry(param_2).or_default(),
@@ -87,12 +127,7 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
             }
             9 => {
                 // first param value
-                relative_base += match modes[0] {
-                    0 => *opcodes.entry(param_1).or_default(),
-                    1 => param_1,
-                    2 => *opcodes.entry(param_1 + relative_base).or_default(),
-                    _ => panic!("opcode = {opcode}, modes = {modes:?}"),
-                };
+                relative_base += a;
 
                 // instruction pointer increases by 2
                 inst_ptr += 2;
@@ -107,13 +142,8 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                     };
                     opcodes.insert(index, input);
                 } else {
-                    // result, output value at first param index
-                    result = match modes[0] {
-                        0 => *opcodes.entry(param_1).or_default(),
-                        1 => param_1,
-                        2 => *opcodes.entry(param_1 + relative_base).or_default(),
-                        _ => panic!("opcode = {opcode}, modes = {modes:?}"),
-                    };
+                    // result, output value at first param
+                    result = a;
                     println!("{result}");
                 }
 

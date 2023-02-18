@@ -31,26 +31,33 @@ fn run_program(opcodes: &[usize]) -> Result<usize, Box<dyn Error>> {
 
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut opcodes = get_data(puzzle_lines)?;
+
+    // before running the program, replace position 1 with the value 12
+    // and replace position 2 with the value 2.
     opcodes[1] = 12;
     opcodes[2] = 2;
+
+    // What value is left at position 0 after the program halts?
     run_program(&opcodes)
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut opcodes = get_data(puzzle_lines)?;
 
+    // In this program, the value placed in address 1 is called the noun,
+    // and the value placed in address 2 is called the verb.
+    // Each of the two input values will be between 0 and 99, inclusive.
     for noun in 0..99 {
         for verb in 0..99 {
-            // before running the program, replace position 1 with the value 12
-            // and replace position 2 with the value 2.
-            // What value is left at position 0 after the program halts?
             // In this program, the value placed in address 1 is called the noun,
             // and the value placed in address 2 is called the verb.
-
-            // no bounds checking
+            //
+            // Find the input noun and verb that cause the
+            // program to produce the output 19690720
             opcodes[1] = noun;
             opcodes[2] = verb;
             if run_program(&opcodes)? == 19690720 {
+                // What is 100 * noun + verb?
                 return Ok(100 * noun + verb);
             }
         }

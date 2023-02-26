@@ -100,15 +100,17 @@ fn get_slopes(points: &[(i64, i64)]) -> Vec<((i64, i64), i64, i64)> {
 fn los_count(points: &[(i64, i64)]) -> Vec<((i64, i64), usize)> {
     let slopes = get_slopes(points);
 
-    // turn the Vec of slope observations "(point, rise, run)" into a Set
-    // to collapse all the point observations with the same slope into
-    // something that can be counted as "direct line of sight"
-    let slopeset = slopes.iter().collect::<HashSet<_>>();
-
+    // collect the Vec of slope observations "(point, rise, run)" into
+    // a HashSet to collapse all the point observations with the same
+    // slope into something that can be counted as "direct line of sight"
     let mut counts = HashMap::new();
-    for (observation, _, _) in slopeset {
-        *counts.entry(*observation).or_insert(0) += 1;
-    }
+    slopes
+        .iter()
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .for_each(|(observation, _, _)| {
+            *counts.entry(observation).or_insert(0) += 1;
+        });
 
     points.iter().map(|p| (*p, counts[p])).collect()
 }
@@ -138,10 +140,9 @@ fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
         .filter(|p| p.2 != 0)
         .map(|p| p.2)
         .reduce(num_integer::lcm)
-        .expect("lcm");
+        .expect("lcm error");
 
-    // make all rise/run comparable
-    // this is a little wonky, i64::MAX is a surragate for inf (infinite slope)
+    // make all rise/run comparable using i64::MAX as a surragate for (infinite slope)
     let norm_points = slopes
         .into_iter()
         .map(|(p, rise, run)| match run == 0 {
@@ -150,31 +151,26 @@ fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
         })
         .collect::<Vec<_>>();
 
-    // clockwise() returns a list, a concatenation of quadrants 1-4
+    // clockwise() returns a list concatenation of quadrants 1-4
     // where each quadrant has been "sweep" ordered
     //
-    // build a work queue from the list
+    // build a work queue from the clockwise() list
     let mut workq: VecDeque<_> = clockwise(best, &norm_points).into_iter().collect();
 
     // asteroids have form: ((x, y), slope)
     let mut last = (best, -1);
     let mut count = 0;
     while let Some(asteroid) = workq.pop_front() {
-        if asteroid.1 == last.1 {
-            if workq.is_empty() {
-                break;
-            }
-            // same slope as the last point, go to the back of the workq for the next sweep
+        if asteroid.1 == last.1 && !workq.is_empty() {
+            // same slope as the last point, push to the back of the workq for the next sweep
             workq.push_back(asteroid);
-            continue;
+        } else {
+            count += 1;
+            if count == 200 {
+                return Ok(asteroid.0 .0 * 100 + asteroid.0 .1);
+            }
+            last = asteroid;
         }
-
-        count += 1;
-        if count == 200 {
-            return Ok(asteroid.0 .0 * 100 + asteroid.0 .1);
-        }
-
-        last = asteroid;
     }
 
     Ok(-1)

@@ -1,7 +1,7 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
 use itertools::Itertools;
 use num_integer::gcd;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::error::Error;
 use std::io::{self, Write};
 
@@ -22,44 +22,6 @@ fn get_data(puzzle_lines: &[String]) -> Result<Vec<(i64, i64)>, Box<dyn Error>> 
         }
     }
     Ok(points)
-}
-
-fn get_slopes(points: &[(i64, i64)]) -> Vec<((i64, i64), i64, i64)> {
-    // compute the pairwise slopes over the points
-    //
-    // collect a list of (point, rise, run).
-    // where rise and run have been reduced by gcd
-    //
-    // combinations(2) generates the pairwise points
-    let mut slopes = vec![];
-    for point_pair in points.iter().combinations(2).collect::<Vec<_>>() {
-        let (point1, point2) = (point_pair[0], point_pair[1]);
-
-        let x_change = point1.0 - point2.0;
-        let y_change = point1.1 - point2.1;
-        let gcd = gcd(x_change, y_change);
-
-        let (rise, run) = (y_change / gcd, x_change / gcd);
-
-        // rise & run for each point to the other
-        slopes.push((*point1, rise, run));
-        slopes.push((*point2, -rise, -run));
-    }
-    slopes
-}
-
-fn get_counts(points: &[(i64, i64)]) -> Vec<((i64, i64), usize)> {
-    let slopes = get_slopes(points);
-
-    // collect the Vec of (point, rise, run) into a Set
-    //
-    // only count points in direct line of sight
-    // (set collisions handle this)
-    let slopeset = slopes.iter().collect::<HashSet<_>>();
-    points
-        .iter()
-        .map(|p| (*p, slopeset.iter().filter(|(point, _, _)| point == p).count()))
-        .collect()
 }
 
 #[rustfmt::skip]
@@ -106,21 +68,69 @@ fn clockwise(point: (i64, i64), points: &[((i64, i64), i64)]) -> Vec<((i64, i64)
     quad1
 }
 
+// compute the pairwise slopes over all points
+//
+// collect a list of (point, rise, run).
+// where rise and run have been reduced by gcd
+//
+// right now this is just a raw observation list,
+// recording the slopes between point1 and point2 as:
+//   (point1, rise, run)
+//   (point2, -rise, -run)
+//
+// combinations(2) generates the pairwise collection
+fn get_slopes(points: &[(i64, i64)]) -> Vec<((i64, i64), i64, i64)> {
+    let mut slopes = vec![];
+    for point_pair in points.iter().combinations(2).collect::<Vec<_>>() {
+        let (point1, point2) = (point_pair[0], point_pair[1]);
+
+        let x_change = point1.0 - point2.0;
+        let y_change = point1.1 - point2.1;
+        let gcd = gcd(x_change, y_change);
+
+        let (rise, run) = (y_change / gcd, x_change / gcd);
+
+        // rise & run for each point to the other
+        slopes.push((*point1, rise, run));
+        slopes.push((*point2, -rise, -run));
+    }
+    slopes
+}
+
+// line of sight counts
+fn los_count(points: &[(i64, i64)]) -> Vec<((i64, i64), usize)> {
+    let slopes = get_slopes(points);
+
+    // turn the Vec of slope observations "(point, rise, run)" into a Set
+    // to collapse all the point observations with the same slope into
+    // something that can be counted as "direct line of sight"
+    let slopeset = slopes.iter().collect::<HashSet<_>>();
+
+    let mut counts = HashMap::new();
+    for (observation, _, _) in slopeset {
+        *counts.entry(*observation).or_insert(0) += 1;
+    }
+
+    points.iter().map(|p| (*p, counts[p])).collect()
+}
+
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let points = get_data(puzzle_lines)?;
-    Ok(get_counts(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().1)
+    // given all the direct line of sight counts, return the max
+    Ok(los_count(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().1)
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
     let points = get_data(puzzle_lines)?;
 
-    let best_location = get_counts(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().0;
+    // get the point with highest direct line of sight count
+    let best_location = los_count(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().0;
 
-    // get_counts() already did a form of this, some refactoring to
-    // of the part1(), part2() components would make this unnecessary
+    // get_slopes() already did a form of this, some refactoring to
+    // the part1(), part2() components would make this unnecessary
     //
     // gathering absolute rise, run since the comparisons are being
-    // done in 4 separate quadrants, we just need a number to order on
+    // done in 4 separate quadrants, we just need a number to Order
     let mut slopes = vec![];
     for point in points.iter().filter(|p| **p != best_location) {
         let x_change = best_location.0 - point.0;

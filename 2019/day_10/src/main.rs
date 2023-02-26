@@ -126,38 +126,28 @@ fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
     // get the point with highest direct line of sight count
     let best_location = los_count(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().0;
 
-    // get_slopes() already did a form of this, some refactoring to
-    // the part1(), part2() components would make this unnecessary
-    //
-    // gathering absolute rise, run since the comparisons are being
-    // done in 4 separate quadrants, we just need a number to Order
-    let mut slopes = vec![];
-    for point in points.iter().filter(|p| **p != best_location) {
-        let x_change = best_location.0 - point.0;
-        let y_change = best_location.1 - point.1;
-        let gcd = gcd(x_change, y_change);
-
-        let (rise, run) = (y_change / gcd, x_change / gcd);
-
-        slopes.push((*point, rise.abs(), run.abs()));
-    }
+    // rise/run to the best_location
+    let slopes = points
+        .iter()
+        .filter(|p| **p != best_location)
+        .map(|p| (*p, best_location.1 - p.1, best_location.0 - p.0))
+        .collect::<Vec<_>>();
 
     // make all the rise, run pairs comparable
-    let denominators = slopes.iter().map(|tup| tup.2).collect::<Vec<_>>();
-    let lcm = denominators
+    // slopes.push((*point1, rise, run));
+    let non_zero_runs = slopes.iter().filter(|p| p.2 != 0).map(|p| p.2).collect::<Vec<_>>();
+    let lcm = non_zero_runs
         .iter()
-        .filter(|x| *x != &0)
-        .fold(denominators[0], |lcm, x| num_integer::lcm(lcm, *x));
+        .fold(non_zero_runs[0], |lcm, x| num_integer::lcm(lcm, *x));
 
     // this is a little wonky, i64::MAX is a surragate for inf (infinite slope)
-    let mut norm_points = vec![];
-    for (p, rise, run) in slopes {
-        if run == 0 {
-            norm_points.push((p, i64::MAX));
-        } else {
-            norm_points.push((p, rise * (lcm / run)));
-        }
-    }
+    let norm_points = slopes
+        .iter()
+        .map(|(p, rise, run)| match *run == 0 {
+            true => (*p, i64::MAX),
+            false => (*p, lcm * rise.abs() / run.abs()),
+        })
+        .collect::<Vec<_>>();
 
     // clockwise() returns a list, a concatenation of quadrants 1-4
     // where each quadrant has been "sweep" ordered

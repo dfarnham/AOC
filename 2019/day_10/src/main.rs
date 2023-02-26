@@ -1,6 +1,5 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
 use itertools::Itertools;
-use num_integer::gcd;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::error::Error;
 use std::io::{self, Write};
@@ -86,7 +85,7 @@ fn get_slopes(points: &[(i64, i64)]) -> Vec<((i64, i64), i64, i64)> {
 
         let x_change = point1.0 - point2.0;
         let y_change = point1.1 - point2.1;
-        let gcd = gcd(x_change, y_change);
+        let gcd = num_integer::gcd(x_change, y_change);
 
         let (rise, run) = (y_change / gcd, x_change / gcd);
 
@@ -133,13 +132,15 @@ fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
         .map(|p| (*p, best_location.1 - p.1, best_location.0 - p.0))
         .collect::<Vec<_>>();
 
-    // make all the rise, run pairs comparable
-    // slopes.push((*point1, rise, run));
-    let non_zero_runs = slopes.iter().filter(|p| p.2 != 0).map(|p| p.2).collect::<Vec<_>>();
-    let lcm = non_zero_runs
+    // find the lcm of all non-zero run values
+    let lcm = slopes
         .iter()
-        .fold(non_zero_runs[0], |lcm, x| num_integer::lcm(lcm, *x));
+        .filter(|p| p.2 != 0)
+        .map(|p| p.2)
+        .reduce(num_integer::lcm)
+        .expect("lcm");
 
+    // make all rise/run comparable
     // this is a little wonky, i64::MAX is a surragate for inf (infinite slope)
     let norm_points = slopes
         .iter()

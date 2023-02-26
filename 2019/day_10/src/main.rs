@@ -123,13 +123,13 @@ fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
     let points = get_data(puzzle_lines)?;
 
     // get the point with highest direct line of sight count
-    let best_location = los_count(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().0;
+    let best = los_count(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().0;
 
-    // rise/run to the best_location
+    // rise/run to the best
     let slopes = points
-        .iter()
-        .filter(|p| **p != best_location)
-        .map(|p| (*p, best_location.1 - p.1, best_location.0 - p.0))
+        .into_iter()
+        .filter(|p| *p != best)
+        .map(|p| (p, (best.1 - p.1).abs(), (best.0 - p.0).abs()))
         .collect::<Vec<_>>();
 
     // find the lcm of all non-zero run values
@@ -143,32 +143,29 @@ fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
     // make all rise/run comparable
     // this is a little wonky, i64::MAX is a surragate for inf (infinite slope)
     let norm_points = slopes
-        .iter()
-        .map(|(p, rise, run)| match *run == 0 {
-            true => (*p, i64::MAX),
-            false => (*p, lcm * rise.abs() / run.abs()),
+        .into_iter()
+        .map(|(p, rise, run)| match run == 0 {
+            true => (p, i64::MAX),
+            false => (p, lcm * rise / run),
         })
         .collect::<Vec<_>>();
 
     // clockwise() returns a list, a concatenation of quadrants 1-4
     // where each quadrant has been "sweep" ordered
     //
-    // use a work queue to keep cycling through the points
-    let mut list = clockwise(best_location, &norm_points)
-        .iter()
-        .copied()
-        .collect::<VecDeque<_>>();
+    // build a work queue from the list
+    let mut workq: VecDeque<_> = clockwise(best, &norm_points).into_iter().collect();
 
-    // asteroids are: ((x, y), slope)
-    let mut last = (best_location, -1);
+    // asteroids have form: ((x, y), slope)
+    let mut last = (best, -1);
     let mut count = 0;
-    while let Some(asteroid) = list.pop_front() {
+    while let Some(asteroid) = workq.pop_front() {
         if asteroid.1 == last.1 {
-            if list.is_empty() {
+            if workq.is_empty() {
                 break;
             }
-            // same slope as the last point, go to the back of the list for the next sweep
-            list.push_back(asteroid);
+            // same slope as the last point, go to the back of the workq for the next sweep
+            workq.push_back(asteroid);
             continue;
         }
 

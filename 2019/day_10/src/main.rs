@@ -98,14 +98,12 @@ fn get_slopes(points: &[(i64, i64)]) -> Vec<((i64, i64), i64, i64)> {
 
 // return point with the highest line of sight count
 fn los(points: &[(i64, i64)]) -> Option<((i64, i64), usize)> {
-    let slopes = get_slopes(points);
-
     // collect the Vec of slope observations "(point, rise, run)" into
     // a HashSet to collapse all the point observations with the same
     // slope into something that can be counted as "direct line of sight"
     let mut counts = HashMap::new();
-    slopes
-        .iter()
+    get_slopes(points)
+        .into_iter()
         .collect::<HashSet<_>>()
         .into_iter()
         .for_each(|(observation, _, _)| {

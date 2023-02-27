@@ -96,8 +96,8 @@ fn get_slopes(points: &[(i64, i64)]) -> Vec<((i64, i64), i64, i64)> {
     slopes
 }
 
-// line of sight counts
-fn los_count(points: &[(i64, i64)]) -> Vec<((i64, i64), usize)> {
+// return point with the highest line of sight count
+fn los(points: &[(i64, i64)]) -> Option<((i64, i64), usize)> {
     let slopes = get_slopes(points);
 
     // collect the Vec of slope observations "(point, rise, run)" into
@@ -112,20 +112,26 @@ fn los_count(points: &[(i64, i64)]) -> Vec<((i64, i64), usize)> {
             *counts.entry(observation).or_insert(0) += 1;
         });
 
-    points.iter().map(|p| (*p, counts[p])).collect()
+    points.iter().map(|p| (*p, counts[p])).max_by(|a, b| a.1.cmp(&b.1))
 }
 
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let points = get_data(puzzle_lines)?;
-    // given all the direct line of sight counts, return the max
-    Ok(los_count(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().1)
+    let count = match los(&points) {
+        Some(highest_los) => highest_los.1,
+        None => return Err("los() failed".into()),
+    };
+    Ok(count)
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
     let points = get_data(puzzle_lines)?;
 
     // get the point with highest direct line of sight count
-    let best = los_count(&points).iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap().0;
+    let best = match los(&points) {
+        Some(highest_los) => highest_los.0,
+        None => return Err("los() failed".into()),
+    };
 
     // rise/run to the best
     let slopes = points

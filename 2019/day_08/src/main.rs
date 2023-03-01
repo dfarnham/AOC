@@ -55,7 +55,7 @@ fn part2(puzzle_lines: &[String], rows: usize, columns: usize) -> Result<Vec<cha
         if i > 0 && i % columns == 0 {
             println!();
         }
-        print!("{}", if *c == '1' { '\u{25a0}' } else { ' ' });
+        print!("{}", if *c == '1' { '\u{2588}' } else { ' ' });
     }
     println!();
 

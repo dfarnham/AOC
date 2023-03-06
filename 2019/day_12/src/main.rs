@@ -95,7 +95,7 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 
     // cycles was initialized to all None
     // loop until all cycles are Some(iteration count)
-    while !cycles.iter().all(|c| c.is_some()) {
+    while cycles.iter().any(|c| c.is_none()) {
         // 0 == x
         // 1 == y
         // 2 == z

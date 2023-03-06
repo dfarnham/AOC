@@ -87,52 +87,37 @@ fn part1(puzzle_lines: &[String], steps: usize) -> Result<i64, Box<dyn Error>> {
         .sum())
 }
 
+//#[rustfmt::skip]
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut moons = get_data(puzzle_lines)?;
     let mut velocity = vec![(0, 0, 0); moons.len()];
     let mut visited = vec![HashSet::new(); 3];
     let mut cycles = vec![None; 3];
 
-    // cycles was initialized to all None
+    // cycles is a vector initialized to None
     // loop until all cycles are Some(iteration count)
     while cycles.iter().any(|c| c.is_none()) {
         // 0 == x
         // 1 == y
         // 2 == z
         //
-        // this is just creating hashkeys on each moon & velocity update.
+        // this is simply creating/inserting hash keys on every moon & velocity update.
         //
         // each axis has an associated "visited" HashSet.
-        // the hashkeys are inserted on each axis until a collision occurs
-        // the length of the hash at first collision is the cycle count
+        // the hash keys are inserted on each axis until a collision occurs
+        // the length of the HashSet at first collision is the cycle count
 
         for i in 0..3 {
             if cycles[i].is_none() {
-                // we're slicing the x, y, z axis across the moons
-                // and building a HashKey for each axis
-                let query = match i {
-                    // x
-                    0 => (
-                        moons.iter().map(|m| m.0).collect::<Vec<_>>(),
-                        velocity.iter().map(|v| v.0).collect::<Vec<_>>(),
-                    ),
-
-                    // y
-                    1 => (
-                        moons.iter().map(|m| m.1).collect::<Vec<_>>(),
-                        velocity.iter().map(|v| v.1).collect::<Vec<_>>(),
-                    ),
-
-                    // z
-                    2 => (
-                        moons.iter().map(|m| m.2).collect::<Vec<_>>(),
-                        velocity.iter().map(|v| v.2).collect::<Vec<_>>(),
-                    ),
-
+                // slice the moons across the x, y, or z axis and build a hash key
+                let query: Vec<_> = match i {
+                    0 => moons.iter().map(|m| m.0).zip(velocity.iter().map(|v| v.0)).collect(),
+                    1 => moons.iter().map(|m| m.1).zip(velocity.iter().map(|v| v.1)).collect(),
+                    2 => moons.iter().map(|m| m.2).zip(velocity.iter().map(|v| v.2)).collect(),
                     _ => panic!("wtf"),
                 };
 
-                // collect hash keys (per axis) until a collision
+                // insert keys until a collision
                 if visited[i].contains(&query) {
                     cycles[i] = Some(visited[i].len());
                     visited[i].clear(); // done with this data
@@ -141,6 +126,7 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
                 }
             }
         }
+
         update_pos_velocity(&mut moons, &mut velocity);
     }
 

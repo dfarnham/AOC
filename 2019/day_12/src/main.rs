@@ -21,58 +21,62 @@ fn get_data(puzzle_lines: &[String]) -> Result<Vec<(i64, i64, i64)>, Box<dyn Err
     Ok(moons)
 }
 
+fn update_pos_velocity(moons: &mut [(i64, i64, i64)], velocity: &mut [(i64, i64, i64)]) {
+    for i in 0..moons.len() {
+        for j in i + 1..moons.len() {
+            // x
+            match moons[i].0.cmp(&moons[j].0) {
+                Ordering::Greater => {
+                    velocity[i].0 -= 1;
+                    velocity[j].0 += 1;
+                }
+                Ordering::Less => {
+                    velocity[i].0 += 1;
+                    velocity[j].0 -= 1;
+                }
+                Ordering::Equal => {}
+            };
+            // y
+            match moons[i].1.cmp(&moons[j].1) {
+                Ordering::Greater => {
+                    velocity[i].1 -= 1;
+                    velocity[j].1 += 1;
+                }
+                Ordering::Less => {
+                    velocity[i].1 += 1;
+                    velocity[j].1 -= 1;
+                }
+                Ordering::Equal => {}
+            };
+            // z
+            match moons[i].2.cmp(&moons[j].2) {
+                Ordering::Greater => {
+                    velocity[i].2 -= 1;
+                    velocity[j].2 += 1;
+                }
+                Ordering::Less => {
+                    velocity[i].2 += 1;
+                    velocity[j].2 -= 1;
+                }
+                Ordering::Equal => {}
+            };
+        }
+    }
+
+    // positions
+    for i in 0..moons.len() {
+        moons[i].0 += velocity[i].0;
+        moons[i].1 += velocity[i].1;
+        moons[i].2 += velocity[i].2;
+    }
+}
+
 fn part1(puzzle_lines: &[String], steps: usize) -> Result<i64, Box<dyn Error>> {
     let mut moons = get_data(puzzle_lines)?;
     let mut velocity = vec![(0, 0, 0); moons.len()];
 
     for _ in 0..steps {
-        for i in 0..moons.len() {
-            for j in i + 1..moons.len() {
-                // x
-                match moons[i].0.cmp(&moons[j].0) {
-                    Ordering::Greater => {
-                        velocity[i].0 -= 1;
-                        velocity[j].0 += 1;
-                    }
-                    Ordering::Less => {
-                        velocity[i].0 += 1;
-                        velocity[j].0 -= 1;
-                    }
-                    Ordering::Equal => {}
-                };
-                // y
-                match moons[i].1.cmp(&moons[j].1) {
-                    Ordering::Greater => {
-                        velocity[i].1 -= 1;
-                        velocity[j].1 += 1;
-                    }
-                    Ordering::Less => {
-                        velocity[i].1 += 1;
-                        velocity[j].1 -= 1;
-                    }
-                    Ordering::Equal => {}
-                };
-                // z
-                match moons[i].2.cmp(&moons[j].2) {
-                    Ordering::Greater => {
-                        velocity[i].2 -= 1;
-                        velocity[j].2 += 1;
-                    }
-                    Ordering::Less => {
-                        velocity[i].2 += 1;
-                        velocity[j].2 -= 1;
-                    }
-                    Ordering::Equal => {}
-                };
-            }
-        }
-
-        // positions
-        for i in 0..moons.len() {
-            moons[i].0 += velocity[i].0;
-            moons[i].1 += velocity[i].1;
-            moons[i].2 += velocity[i].2;
-        }
+        update_pos_velocity(&mut moons, &mut velocity);
     }
 
     Ok(moons
@@ -89,9 +93,23 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut visited = vec![HashSet::new(); 3];
     let mut cycles = vec![None; 3];
 
+    // cycles was initialized to all None
+    // loop until all cycles are Some(iteration count)
     while !cycles.iter().all(|c| c.is_some()) {
+        // 0 == x
+        // 1 == y
+        // 2 == z
+        //
+        // this is just creating hashkeys on each moon & velocity update.
+        //
+        // each axis has an associated "visited" HashSet.
+        // the hashkeys are inserted on each axis until a collision occurs
+        // the length of the hash at first collision is the cycle count
+
         for i in 0..3 {
             if cycles[i].is_none() {
+                // we're slicing the x, y, z axis across the moons
+                // and building a HashKey for each axis
                 let query = match i {
                     // x
                     0 => (
@@ -114,62 +132,16 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
                     _ => panic!("wtf"),
                 };
 
+                // collect hash keys (per axis) until a collision
                 if visited[i].contains(&query) {
-                    cycles[i] = Some(visited[i].len()); // length of the HashSet is the cycle length
-                    visited[i].clear(); // don't need this HashSet anymore
+                    cycles[i] = Some(visited[i].len());
+                    visited[i].clear(); // done with this data
                 } else {
                     visited[i].insert(query);
                 }
             }
         }
-
-        for i in 0..moons.len() {
-            for j in i + 1..moons.len() {
-                // x
-                match moons[i].0.cmp(&moons[j].0) {
-                    Ordering::Greater => {
-                        velocity[i].0 -= 1;
-                        velocity[j].0 += 1;
-                    }
-                    Ordering::Less => {
-                        velocity[i].0 += 1;
-                        velocity[j].0 -= 1;
-                    }
-                    Ordering::Equal => {}
-                };
-                // y
-                match moons[i].1.cmp(&moons[j].1) {
-                    Ordering::Greater => {
-                        velocity[i].1 -= 1;
-                        velocity[j].1 += 1;
-                    }
-                    Ordering::Less => {
-                        velocity[i].1 += 1;
-                        velocity[j].1 -= 1;
-                    }
-                    Ordering::Equal => {}
-                };
-                // z
-                match moons[i].2.cmp(&moons[j].2) {
-                    Ordering::Greater => {
-                        velocity[i].2 -= 1;
-                        velocity[j].2 += 1;
-                    }
-                    Ordering::Less => {
-                        velocity[i].2 += 1;
-                        velocity[j].2 -= 1;
-                    }
-                    Ordering::Equal => {}
-                };
-            }
-        }
-
-        // positions
-        for i in 0..moons.len() {
-            moons[i].0 += velocity[i].0;
-            moons[i].1 += velocity[i].1;
-            moons[i].2 += velocity[i].2;
-        }
+        update_pos_velocity(&mut moons, &mut velocity);
     }
 
     //println!("{cycles:?}");

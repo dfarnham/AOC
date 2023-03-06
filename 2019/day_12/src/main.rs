@@ -87,7 +87,6 @@ fn part1(puzzle_lines: &[String], steps: usize) -> Result<i64, Box<dyn Error>> {
         .sum())
 }
 
-//#[rustfmt::skip]
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut moons = get_data(puzzle_lines)?;
     let mut velocity = vec![(0, 0, 0); moons.len()];

@@ -11,7 +11,6 @@ fn winning_board(board: &Array2<u32>) -> bool {
     for row in 0..BOARD_DIM {
         if BOARD_DIM
             == (0..BOARD_DIM)
-                .into_iter()
                 .filter(|col| board[[row, *col]] == MATCH)
                 .count()
         {
@@ -22,7 +21,6 @@ fn winning_board(board: &Array2<u32>) -> bool {
     for col in 0..BOARD_DIM {
         if BOARD_DIM
             == (0..BOARD_DIM)
-                .into_iter()
                 .filter(|row| board[[*row, col]] == MATCH)
                 .count()
         {

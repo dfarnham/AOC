@@ -13,7 +13,7 @@ fn get_gamma_epsilon(data: &[u32]) -> (u32, u32) {
     let mut epsilon = 0;
 
     let nbits = nbits(data);
-    let masks = (0..nbits).into_iter().map(|i| 1 << i).collect::<Vec<_>>();
+    let masks = (0..nbits).map(|i| 1 << i).collect::<Vec<_>>();
     for mask in masks {
         let count = data.par_iter().filter(|n| (*n & mask) == mask).count();
         // are there more bits "on" than "off" in this position?

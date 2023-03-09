@@ -18,7 +18,6 @@ where
     );
 
     (0..(array.len() - window))
-        .into_iter()
         .filter(|&i| array[i..(i + window)].iter().sum::<T>() < array[(i + 1)..=(i + window)].iter().sum::<T>())
         .count()
 }

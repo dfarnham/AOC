@@ -13,11 +13,9 @@ fn get_solution2(data: &[u32]) -> (usize, u32) {
     let sum_to_n = |n| (n * (n + 1) / 2) as usize;
     for pos in min..=max {
         let left_cost = (min..pos)
-            .into_iter()
             .map(|i| counts[&i] * sum_to_n(pos - i))
             .sum::<usize>();
         let right_cost = (pos..=max)
-            .into_iter()
             .map(|i| counts[&i] * sum_to_n(i - pos))
             .sum::<usize>();
         match left_cost + right_cost {

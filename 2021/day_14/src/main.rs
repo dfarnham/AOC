@@ -49,7 +49,7 @@ fn pair_counts(
 
 fn solution(start: &str, productions: &HashMap<String, String>, steps: usize) -> usize {
     // initialize counter with starting chars
-    let mut cntr = start.chars().into_iter().map(|c| c.to_string()).collect::<Counter<_>>();
+    let mut cntr = start.chars().map(|c| c.to_string()).collect::<Counter<_>>();
 
     // initialize a "pair => Counter" memoize cache
     let mut cache = HashMap::new();

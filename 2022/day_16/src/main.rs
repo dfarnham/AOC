@@ -113,7 +113,6 @@ fn choose_one(v: &[usize]) -> impl Iterator<Item = (&usize, Vec<usize>)> {
                     .copied()
                     .collect()
             })
-            .into_iter(),
     )
 }
 

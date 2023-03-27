@@ -1,5 +1,6 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
 use regex::Regex;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::error::Error;
 use std::io::{self, Write};
@@ -51,35 +52,33 @@ fn get_data(puzzle_lines: &[String]) -> Result<HashMap<String, (usize, Vec<(Stri
 
 #[allow(clippy::type_complexity)]
 fn ore_count(chemicals: &HashMap<String, (usize, Vec<(String, usize)>)>, fuel_quantity: usize) -> usize {
-    let mut resources = HashMap::new();
+    let mut req = HashMap::from([("FUEL".to_string(), fuel_quantity)]);
+    let mut resources = HashMap::from([("FUEL".to_string(), 0)]);
+
+    // occurrence counts
     for (_, formula) in chemicals.values() {
         for (chem, _) in formula.iter() {
             *resources.entry(chem.into()).or_insert(0) += 1;
         }
     }
-    resources.insert("FUEL".to_string(), 0);
 
-    let mut req = HashMap::new();
-    req.insert("FUEL".to_string(), fuel_quantity);
+    while let Some((c, _)) = resources.clone().into_iter().find(|(_, q)| *q == 0) {
+        resources.remove(&c);
+        let n = req[&c];
+        if c == "ORE" {
+            return n;
+        }
 
-    loop {
-        if let Some((c, _)) = resources.clone().into_iter().find(|(_, q)| *q == 0) {
-            let n = req[&c];
-            if c == "ORE" {
-                return n;
+        let (num, formula) = &chemicals[&c];
+        let amt = (n + num - 1) / num;
+        for (chem, quantity) in formula {
+            *req.entry(chem.into()).or_insert(0) += amt * quantity;
+            if let Some(count) = resources.get_mut(chem) {
+                *count -= 1;
             }
-
-            let (num, formula) = &chemicals[&c];
-            let amt = (n + num - 1) / num;
-            for (chem, quantity) in formula {
-                *req.entry(chem.into()).or_insert(0) += amt * quantity;
-                *resources.entry(chem.into()).or_insert(0) -= 1;
-            }
-            resources.remove(&c);
-        } else {
-            panic!("no solution");
         }
     }
+    0
 }
 
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
@@ -89,35 +88,22 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let chemicals = get_data(puzzle_lines)?;
-
-    // *************************************** HACK ***************************************
-    //
-    // pseudo binary-search guess hack which gets the right answer but can loop indefinitely
-    //
-    // initial guess is the ammount of ore for 1 FUEL scaled to 1000000000000
-    //
-    // keep adding the FUEL quantity until we overshoot the 1 trillion goal, at which point
-    // we back off and shrink the increment in half
-    //
-    // when the increment is eventually 1 return the previous guess (which was guess - 1)
-    //
-    // ************************************************************************************
-
     let ore_goal = 1000000000000;
-    let mut inc = ore_count(&chemicals, 1);
-    let mut guess = ore_goal / inc;
-    loop {
-        if ore_count(&chemicals, guess) > ore_goal {
-            if inc == 1 {
-                return Ok(guess - 1);
-            } else {
-                guess -= inc;
-                inc /= 2;
+
+    let (mut lo, mut hi) = (0, ore_goal);
+    while lo < hi {
+        let mid = lo + (hi - lo + 1) / 2;
+        match ore_count(&chemicals, mid).cmp(&ore_goal) {
+            Ordering::Greater => {
+                hi = mid - 1;
             }
-        } else {
-            guess += inc;
+            Ordering::Less | Ordering::Equal => {
+                lo = mid;
+            }
         }
     }
+
+    Ok(lo)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -173,6 +159,20 @@ mod tests {
     fn part1_example3() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example3");
         assert_eq!(part1(&puzzle_lines)?, 2210736);
+        Ok(())
+    }
+
+    #[test]
+    fn part1_example4() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example4");
+        assert_eq!(part1(&puzzle_lines)?, 31);
+        Ok(())
+    }
+
+    #[test]
+    fn part1_example5() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example5");
+        assert_eq!(part1(&puzzle_lines)?, 165);
         Ok(())
     }
 

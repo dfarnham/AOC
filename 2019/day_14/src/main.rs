@@ -49,6 +49,7 @@ fn get_data(puzzle_lines: &[String]) -> Result<HashMap<String, (usize, Vec<(Stri
     Ok(chemicals)
 }
 
+#[allow(clippy::type_complexity)]
 fn ore_count(chemicals: &HashMap<String, (usize, Vec<(String, usize)>)>, fuel_quantity: usize) -> usize {
     let mut resources = HashMap::new();
     for (_, formula) in chemicals.values() {

@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::io::{self, Write};
 
+// switch to directed graph and a topological search (credit to Jonathan Paulson) https://www.youtube.com/watch?v=4FcSOBDpOeM
+
 #[allow(clippy::type_complexity)]
 // this turns an array of input lines:
 //      10 ORE => 10 A

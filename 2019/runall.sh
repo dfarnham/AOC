@@ -3,10 +3,10 @@
 inputs="input-example input-actual"
 
 echo "========== CHECK =========="
-cargo check
+cargo check --release
 
 echo "========== CLIPPY =========="
-cargo clippy
+cargo clippy --release
 
 echo "========== TESTS =========="
 cargo test --release

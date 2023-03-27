@@ -1,6 +1,5 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
 use regex::Regex;
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::error::Error;
 use std::io::{self, Write};
@@ -25,7 +24,7 @@ use std::io::{self, Write};
 // }
 fn get_data(puzzle_lines: &[String]) -> Result<HashMap<String, (usize, Vec<(String, usize)>)>, Box<dyn Error>> {
     let re = Regex::new(r"(.*)\s+=>\s+(\d+)\s+([A-Z]+)")?;
-    let mut chemicals = HashMap::new();
+    let mut reactions = HashMap::new();
 
     for line in puzzle_lines {
         if let Some(captures) = re.captures(line) {
@@ -41,65 +40,61 @@ fn get_data(puzzle_lines: &[String]) -> Result<HashMap<String, (usize, Vec<(Stri
 
             // base quantity parsed from: "quantity name"
             // insert into Hash as key=name, value=(quantity, formula)
-            chemicals.insert(
+            reactions.insert(
                 captures.get(3).map(|s| s.as_str().into()).unwrap(),
                 (captures.get(2).map(|s| s.as_str().parse::<usize>()).unwrap()?, formula),
             );
         }
     }
-    Ok(chemicals)
+    Ok(reactions)
 }
 
 #[allow(clippy::type_complexity)]
-fn ore_count(chemicals: &HashMap<String, (usize, Vec<(String, usize)>)>, fuel_quantity: usize) -> usize {
-    let mut req = HashMap::from([("FUEL".to_string(), fuel_quantity)]);
+fn ore_count(reactions: &HashMap<String, (usize, Vec<(String, usize)>)>, fuel: usize) -> Result<usize, Box<dyn Error>> {
+    let mut req = HashMap::from([("FUEL".to_string(), fuel)]);
     let mut resources = HashMap::from([("FUEL".to_string(), 0)]);
 
     // occurrence counts
-    for (_, formula) in chemicals.values() {
-        for (chem, _) in formula.iter() {
+    for (_, formula) in reactions.values() {
+        for (chem, _) in formula {
             *resources.entry(chem.into()).or_insert(0) += 1;
         }
     }
 
-    while let Some((c, _)) = resources.clone().into_iter().find(|(_, q)| *q == 0) {
-        resources.remove(&c);
-        let n = req[&c];
-        if c == "ORE" {
-            return n;
+    while let Some((r, _)) = resources.clone().into_iter().find(|(_, q)| *q == 0) {
+        resources.remove(&r);
+
+        let n = req[&r];
+        if r == "ORE" {
+            return Ok(n);
         }
 
-        let (num, formula) = &chemicals[&c];
-        let amt = (n + num - 1) / num;
+        let (lotsz, formula) = &reactions[&r];
+        let amt = (n + lotsz - 1) / lotsz;
         for (chem, quantity) in formula {
             *req.entry(chem.into()).or_insert(0) += amt * quantity;
-            if let Some(count) = resources.get_mut(chem) {
-                *count -= 1;
-            }
+            resources.entry(chem.into()).and_modify(|count| *count -= 1);
         }
     }
-    0
+    Err("ore_count() failed".into())
 }
 
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let chemicals = get_data(puzzle_lines)?;
-    Ok(ore_count(&chemicals, 1))
+    let reactions = get_data(puzzle_lines)?;
+    ore_count(&reactions, 1)
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let chemicals = get_data(puzzle_lines)?;
+    let reactions = get_data(puzzle_lines)?;
     let ore_goal = 1000000000000;
 
     let (mut lo, mut hi) = (0, ore_goal);
     while lo < hi {
         let mid = lo + (hi - lo + 1) / 2;
-        match ore_count(&chemicals, mid).cmp(&ore_goal) {
-            Ordering::Greater => {
-                hi = mid - 1;
-            }
-            Ordering::Less | Ordering::Equal => {
-                lo = mid;
-            }
+        if ore_count(&reactions, mid)? > ore_goal {
+            hi = mid - 1;
+        } else {
+            lo = mid;
         }
     }
 

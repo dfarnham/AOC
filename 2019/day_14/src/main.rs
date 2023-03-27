@@ -49,18 +49,7 @@ fn get_data(puzzle_lines: &[String]) -> Result<HashMap<String, (usize, Vec<(Stri
     Ok(chemicals)
 }
 
-fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let chemicals = get_data(puzzle_lines)?;
-    //println!("{chemicals:?}");
-    // {
-    //   "A":    ( 10, [ ("ORE", 10)        ] ),
-    //   "B":    ( 1,  [ ("ORE", 1)         ] ),
-    //   "C":    ( 1,  [ ("A", 7), ("B", 1) ] ),
-    //   "D":    ( 1,  [ ("A", 7), ("C", 1) ] )
-    //   "E":    ( 1,  [ ("A", 7), ("D", 1) ] ),
-    //   "FUEL": ( 1,  [ ("A", 7), ("E", 1) ] ),
-    // }
-
+fn ore_count(chemicals: &HashMap<String, (usize, Vec<(String, usize)>)>, fuel_quantity: usize) -> usize {
     let mut resources = HashMap::new();
     for (_, formula) in chemicals.values() {
         for (chem, _) in formula.iter() {
@@ -70,13 +59,13 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     resources.insert("FUEL".to_string(), 0);
 
     let mut req = HashMap::new();
-    req.insert("FUEL".to_string(), chemicals["FUEL"].0);
+    req.insert("FUEL".to_string(), fuel_quantity);
 
     loop {
         if let Some((c, _)) = resources.clone().into_iter().find(|(_, q)| *q == 0) {
             let n = req[&c];
             if c == "ORE" {
-                return Ok(n);
+                return n;
             }
 
             let (num, formula) = &chemicals[&c];
@@ -92,70 +81,40 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     }
 }
 
+fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    let chemicals = get_data(puzzle_lines)?;
+    Ok(ore_count(&chemicals, 1))
+}
+
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let chemicals = get_data(puzzle_lines)?;
 
-    let mut resources = HashMap::new();
-    for (_, formula) in chemicals.values() {
-        for (chem, _) in formula.iter() {
-            *resources.entry(chem.into()).or_insert(0) += 1;
-        }
-    }
-    resources.insert("FUEL".to_string(), 0);
-
-    let mut req = HashMap::new();
-
-    let resources_sav = resources.clone();
-
-    // ************************ HACK ************************
+    // *************************************** HACK ***************************************
     //
-    // this is a pseudo binary-search hack and doesn't generalize but got the right answer
+    // pseudo binary-search guess hack which gets the right answer but can loop indefinitely
     //
-    // compute the ammount of ore for 1 FUEL from part1 and use as a guess for the FUEL quantity
+    // initial guess is the ammount of ore for 1 FUEL scaled to 1000000000000
     //
-    // then keep adding that ore amount until we overshoot the 1 trillion goal, at which point
-    // we back off, and shrink the increment in half.
+    // keep adding the FUEL quantity until we overshoot the 1 trillion goal, at which point
+    // we back off and shrink the increment in half
     //
-    // when we overshoot with an increment that's eventually 1 return the previous guess
+    // when the increment is eventually 1 return the previous guess (which was guess - 1)
     //
-    // ******************************************************
-    let one_ore = part1(puzzle_lines).unwrap();
-    let mut guess = 1000000000000 / one_ore;
-    req.insert("FUEL".to_string(), guess);
+    // ************************************************************************************
 
-    let mut inc = one_ore;
-
+    let ore_goal = 1000000000000;
+    let mut inc = ore_count(&chemicals, 1);
+    let mut guess = ore_goal / inc;
     loop {
-        if let Some((c, _)) = resources.clone().into_iter().find(|(_, q)| *q == 0) {
-            let n = req[&c];
-            if c == "ORE" {
-                if n > 1000000000000 {
-                    if inc == 1 {
-                        return Ok(guess - 1);
-                    } else {
-                        guess -= inc;
-                        inc /= 2;
-                        resources = resources_sav.clone();
-                        req.clear();
-                        req.insert("FUEL".to_string(), guess);
-                    }
-                } else {
-                    guess += inc;
-                    resources = resources_sav.clone();
-                    req.clear();
-                    req.insert("FUEL".to_string(), guess);
-                }
+        if ore_count(&chemicals, guess) > ore_goal {
+            if inc == 1 {
+                return Ok(guess - 1);
             } else {
-                let (num, formula) = &chemicals[&c];
-                let amt = (n + num - 1) / num;
-                for (chem, quantity) in formula {
-                    *req.entry(chem.into()).or_insert(0) += amt * quantity;
-                    *resources.entry(chem.into()).or_insert(0) -= 1;
-                }
-                resources.remove(&c);
+                guess -= inc;
+                inc /= 2;
             }
         } else {
-            panic!("no solution");
+            guess += inc;
         }
     }
 }
@@ -198,34 +157,20 @@ mod tests {
     #[test]
     fn part1_example() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example");
-        assert_eq!(part1(&puzzle_lines)?, 31);
+        assert_eq!(part1(&puzzle_lines)?, 13312);
         Ok(())
     }
 
     #[test]
     fn part1_example2() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example2");
-        assert_eq!(part1(&puzzle_lines)?, 165);
+        assert_eq!(part1(&puzzle_lines)?, 180697);
         Ok(())
     }
 
     #[test]
     fn part1_example3() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example3");
-        assert_eq!(part1(&puzzle_lines)?, 13312);
-        Ok(())
-    }
-
-    #[test]
-    fn part1_example4() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example4");
-        assert_eq!(part1(&puzzle_lines)?, 180697);
-        Ok(())
-    }
-
-    #[test]
-    fn part1_example5() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example5");
         assert_eq!(part1(&puzzle_lines)?, 2210736);
         Ok(())
     }
@@ -238,22 +183,22 @@ mod tests {
     }
 
     #[test]
-    fn part2_example3() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example3");
+    fn part2_example() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example");
         assert_eq!(part2(&puzzle_lines)?, 82892753);
         Ok(())
     }
 
     #[test]
-    fn part2_example4() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example4");
+    fn part2_example2() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example2");
         assert_eq!(part2(&puzzle_lines)?, 5586022);
         Ok(())
     }
 
     #[test]
-    fn part2_example5() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example5");
+    fn part2_example3() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example3");
         assert_eq!(part2(&puzzle_lines)?, 460664);
         Ok(())
     }

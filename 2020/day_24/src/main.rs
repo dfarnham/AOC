@@ -61,7 +61,7 @@ fn get_data(data: &[String]) -> Vec<Vec<(i8, i8, i8)>> {
                 moves.push(W);
                 i += 1;
             } else {
-                panic!("oops");
+                unreachable!();
             }
         }
         all_lines.push(moves);

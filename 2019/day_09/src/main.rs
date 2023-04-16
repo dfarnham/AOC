@@ -117,7 +117,7 @@ fn run_program(program: &[i64], input: i64) -> Result<i64, Box<dyn Error>> {
                             2 => a * b,
                             7 => if a < b { 1 } else { 0 },
                             8 => if a == b { 1 } else { 0 },
-                            _ => panic!("wtf"),
+                            _ => unreachable!(),
                         },
                     );
 

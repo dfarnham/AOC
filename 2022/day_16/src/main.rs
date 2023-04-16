@@ -94,7 +94,7 @@ fn solve(puzzle_lines: &[String], part: usize) -> Result<usize, Box<dyn Error>> 
     Ok(match part {
         1 => dfs1(&dist, &flows, 0, &indices, 30, cache1),
         2 => dfs2(&dist, &flows, 0, &indices, 26, cache1, cache2),
-        _ => panic!("oops"),
+        _ => unreachable!(),
     })
 }
 

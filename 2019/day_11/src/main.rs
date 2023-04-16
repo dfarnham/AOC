@@ -126,7 +126,7 @@ fn run_program(program: &[i64], visited: &mut HashMap::<(i64,i64), i64>, input: 
                             2 => a * b,
                             7 => if a < b { 1 } else { 0 },
                             8 => if a == b { 1 } else { 0 },
-                            _ => panic!("wtf"),
+                            _ => unreachable!(),
                         },
                     );
 

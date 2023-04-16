@@ -25,7 +25,7 @@ fn get_program(data: &[String]) -> Vec<Instruction> {
             "acc" => Operation::Acc,
             "jmp" => Operation::Jmp,
             "nop" => Operation::Nop,
-            _ => panic!("oops"),
+            _ => unreachable!(),
         };
         let arg = tokens[1].parse::<i32>().expect("failed parse");
         prog.push(Instruction { op, arg });

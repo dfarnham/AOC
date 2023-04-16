@@ -121,7 +121,7 @@ fn run_program(program: &[i64], screen: &mut Vec<(i64, i64, i64)>, input: i64) -
                             2 => a * b,
                             7 => { if a < b { 1 } else { 0 } }
                             8 => { if a == b { 1 } else { 0 } }
-                            _ => panic!("wtf"),
+                            _ => unreachable!(),
                         },
                     );
 

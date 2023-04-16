@@ -59,7 +59,7 @@ fn gmove1(coord: (usize, usize), grid: &Array2<char>, direction: usize) -> Optio
         1 => (coord.0 + 1, coord.1), // down
         2 => (coord.0, coord.1 - 1), // left
         3 => (coord.0 - 1, coord.1), // up
-        _ => panic!("oops"),
+        _ => unreachable!(),
     };
 
     let params = match direction {
@@ -67,7 +67,7 @@ fn gmove1(coord: (usize, usize), grid: &Array2<char>, direction: usize) -> Optio
         1 => (1, 1, col as i64, 0),                        // down r
         2 => (row as i64, 0, grid.ncols() as i64 - 1, -1), // left c
         3 => (grid.nrows() as i64 - 1, -1, col as i64, 0), // up r
-        _ => panic!("oops"),
+        _ => unreachable!(),
     };
 
     match grid[[row, col]] {
@@ -85,7 +85,7 @@ fn gmove1(coord: (usize, usize), grid: &Array2<char>, direction: usize) -> Optio
             }
         }
         '#' => None,
-        _ => panic!("oops"),
+        _ => unreachable!(),
     }
 }
 
@@ -101,7 +101,7 @@ fn gmove2(
         1 => (coord.0 + 1, coord.1), // down
         2 => (coord.0, coord.1 - 1), // left
         3 => (coord.0 - 1, coord.1), // up
-        _ => panic!("oops"),
+        _ => unreachable!(),
     };
 
     let (row, col, direction) = if grid[[row, col]] == ' ' {
@@ -309,7 +309,7 @@ fn solve(puzzle_lines: &[String], part: usize) -> Result<usize, Box<dyn Error>> 
                         break;
                     }
                 }
-                _ => panic!("oops"),
+                _ => unreachable!(),
             }
         }
         sc += 1;
@@ -320,7 +320,7 @@ fn solve(puzzle_lines: &[String], part: usize) -> Result<usize, Box<dyn Error>> 
         direction = match directions[dc] {
             'R' => (direction + 1) % 4,
             'L' => (direction + 4 - 1) % 4,
-            _ => panic!("oops"),
+            _ => unreachable!(),
         };
         dc += 1;
     }

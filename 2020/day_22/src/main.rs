@@ -37,7 +37,7 @@ fn solution1(data: &[String]) -> usize {
                 player2.push_back(p2_card);
                 player2.push_back(p1_card);
             }
-            _ => panic!("oops"),
+            _ => unreachable!(),
         }
     }
 
@@ -87,7 +87,7 @@ fn game(
                     player2.push_back(p1_card);
                 }
             }
-            _ => panic!("oops"),
+            _ => unreachable!(),
         }
     }
 

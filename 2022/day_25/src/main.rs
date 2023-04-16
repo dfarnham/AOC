@@ -62,7 +62,7 @@ fn base10_to_snafu(n: i64) -> String {
                 true => "0",
                 false => { carry = true; "-" }
             },
-            _ => panic!("oops"),
+            _ => unreachable!(),
         }
     }
     if s.ends_with('-') || s.ends_with('=') {
@@ -84,7 +84,7 @@ fn part1(puzzle_lines: &[String]) -> Result<String, Box<dyn Error>> {
                 '0' => 0,
                 '1' => 1,
                 '2' => 2,
-                _ => panic!("oops"),
+                _ => unreachable!(),
             } * coef;
             coef *= 5;
         }

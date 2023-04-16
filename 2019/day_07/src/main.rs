@@ -73,7 +73,7 @@ fn run_program(program: &[i64], input_phases: &Vec<usize>, feedback: bool) -> Re
                             2 => a * b,
                             7 => if a < b { 1 } else { 0 },
                             8 => if a == b { 1 } else { 0 },
-                            _ => panic!("wtf"),
+                            _ => unreachable!(),
                         };
 
                         // instruction pointer increases by 4

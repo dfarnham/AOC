@@ -18,7 +18,7 @@ fn get_data(puzzle_lines: &[String], n: usize) -> Result<Vec<((i64, i64), usize)
             Some('D') => D,
             Some('R') => R,
             Some('L') => L,
-            _ => panic!("oops"),
+            _ => unreachable!(),
         };
         let n = chars.as_str().parse::<usize>()?;
         directions.push((v, n));

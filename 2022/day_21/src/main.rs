@@ -48,7 +48,7 @@ fn solve(
                         "-" => { values.insert(k, a - b); }
                         "*" => { values.insert(k, a * b); }
                         "/" => { values.insert(k, a / b); }
-                        _ => panic!("oops"),
+                        _ => unreachable!(),
                     }
                 }
             }
@@ -77,7 +77,7 @@ fn part2(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
     // grab the 2 monkey names which "root" depends on
     let (ma, mb) = match expressions.get("root") {
         Some(v) => (v[0].to_string(), v[2].to_string()),
-        _ => panic!("oops"),
+        _ => unreachable!(),
     };
 
     // values "ma,mb" are a function of "humn"

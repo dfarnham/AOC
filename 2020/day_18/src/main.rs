@@ -25,7 +25,7 @@ fn expr(e: &str) -> Option<(usize, i64)> {
                         None => Some((i, result.1)),
                     }
                 }
-                None => panic!("oops"),
+                None => unreachable!(),
             },
             ')' => {
                 return Some((i + 1, operand.unwrap().1));

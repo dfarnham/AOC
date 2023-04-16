@@ -113,7 +113,7 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
                     0 => moons.iter().map(|m| m.0).zip(velocity.iter().map(|v| v.0)).collect(),
                     1 => moons.iter().map(|m| m.1).zip(velocity.iter().map(|v| v.1)).collect(),
                     2 => moons.iter().map(|m| m.2).zip(velocity.iter().map(|v| v.2)).collect(),
-                    _ => panic!("wtf"),
+                    _ => unreachable!(),
                 };
 
                 // insert keys until a collision

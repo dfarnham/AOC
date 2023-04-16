@@ -18,7 +18,7 @@ impl Tile {
             1 => self.mat.slice(s![.., -1]).to_vec(),
             2 => self.mat.slice(s![0, ..]).to_vec(),
             3 => self.mat.slice(s![-1, ..]).to_vec(),
-            _ => panic!("oops"),
+            _ => unreachable!(),
         }
     }
 
@@ -305,7 +305,7 @@ fn solution2(data: &[String]) -> usize {
 
         (r, b) if (r, b) == (1, 3) => { tiles.insert(*id, Tile { mat: rotate_flip(0, false, false, tile) }); }
         (b, r) if (b, r) == (3, 1) => { tiles.insert(*id, Tile { mat: rotate_flip(-90, true, false, tile) }); }
-        _ => panic!("oops"),
+        _ => unreachable!(),
     }
 
     let mut id = *id;
@@ -333,7 +333,7 @@ fn solution2(data: &[String]) -> usize {
             1 => { tiles.insert(right_id, Tile { mat: rotate_flip(0, flip, true, tile) }); }
             2 => { tiles.insert(right_id, Tile { mat: rotate_flip(-90, !flip, false, tile) }); }
             3 => { tiles.insert(right_id, Tile { mat: rotate_flip(90, flip, false, tile) }); }
-            _ => panic!("oops"),
+            _ => unreachable!(),
         }
 
         right_edge = match left_edge {
@@ -341,7 +341,7 @@ fn solution2(data: &[String]) -> usize {
             1 => 0, // right -> left
             2 => 3, // top -> bottom
             3 => 2, // bottom -> top
-            _ => panic!("oops"),
+            _ => unreachable!(),
         };
 
         id = right_id;
@@ -375,7 +375,7 @@ fn solution2(data: &[String]) -> usize {
                 1 => { tiles.insert( down_id, Tile { mat: rotate_flip(-90, false, flip, tile) }); }
                 2 => { tiles.insert( down_id, Tile { mat: rotate_flip(0, false, flip, tile) }); }
                 3 => { tiles.insert( down_id, Tile { mat: rotate_flip(0, true, flip, tile) }); }
-                _ => panic!("oops"),
+                _ => unreachable!(),
             }
             visited.push(down_id);
             tmp.push(down_id);

@@ -2,68 +2,72 @@ use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
 use std::error::Error;
 use std::io::{self, Write};
 
-const ROCK: u64 = 1;
-const PAPER: u64 = 2;
-const SCISSORS: u64 = 3;
+const ROCK: usize = 1;
+const PAPER: usize = 2;
+const SCISSORS: usize = 3;
 
-const WIN: u64 = 6;
-const LOSE: u64 = 0;
-const DRAW: u64 = 3;
+const WIN: usize = 6;
+const LOSE: usize = 0;
+const DRAW: usize = 3;
 
-fn game(puzzle_lines: &[String]) -> Result<u64, Box<dyn Error>> {
-    let mut total = 0;
-    for line in puzzle_lines.iter() {
-        let mut choices = line.chars();
-        let (player1, _, player2) = (choices.next(), choices.next(), choices.next());
-        total += match player2 {
-            Some('X') => match player1 {
-                Some('A') => ROCK + DRAW,
-                Some('B') => ROCK + LOSE,
-                _ => ROCK + WIN,
-            },
-            Some('Y') => match player1 {
-                Some('A') => PAPER + WIN,
-                Some('B') => PAPER + DRAW,
-                _ => PAPER + LOSE,
-            },
-            _ => match player1 {
-                Some('A') => SCISSORS + LOSE,
-                Some('B') => SCISSORS + WIN,
-                _ => SCISSORS + DRAW,
-            },
-        };
+fn game_strategy_1(player1: &str, player2: &str) -> usize {
+    match player2 {
+        "X" => match player1 {
+            "A" => ROCK + DRAW,
+            "B" => ROCK + LOSE,
+            "C" => ROCK + WIN,
+            _ => unreachable!(),
+        },
+        "Y" => match player1 {
+            "A" => PAPER + WIN,
+            "B" => PAPER + DRAW,
+            "C" => PAPER + LOSE,
+            _ => unreachable!(),
+        },
+        "Z" => match player1 {
+            "A" => SCISSORS + LOSE,
+            "B" => SCISSORS + WIN,
+            "C" => SCISSORS + DRAW,
+            _ => unreachable!(),
+        },
+        _ => unreachable!(),
     }
-    Ok(total)
 }
 
-fn part1(puzzle_lines: &[String]) -> Result<u64, Box<dyn Error>> {
-    game(puzzle_lines)
+fn game_strategy_2(player1: &str, player2: &str) -> usize {
+    match player2 {
+        "X" => match player1 {
+            "A" => SCISSORS + LOSE,
+            "B" => ROCK + LOSE,
+            "C" => PAPER + LOSE,
+            _ => unreachable!(),
+        },
+        "Y" => match player1 {
+            "A" => ROCK + DRAW,
+            "B" => PAPER + DRAW,
+            "C" => SCISSORS + DRAW,
+            _ => unreachable!(),
+        },
+        "Z" => match player1 {
+            "A" => PAPER + WIN,
+            "B" => SCISSORS + WIN,
+            "C" => ROCK + WIN,
+            _ => unreachable!(),
+        },
+        _ => unreachable!(),
+    }
 }
 
-fn part2(puzzle_lines: &[String]) -> Result<u64, Box<dyn Error>> {
-    let mut total = 0;
-    for line in puzzle_lines.iter() {
-        let mut choices = line.chars();
-        let (player1, _, player2) = (choices.next(), choices.next(), choices.next());
-        total += match player2 {
-            Some('X') => match player1 {
-                Some('A') => SCISSORS + LOSE,
-                Some('B') => ROCK + LOSE,
-                _ => PAPER + LOSE,
-            },
-            Some('Y') => match player1 {
-                Some('A') => ROCK + DRAW,
-                Some('B') => PAPER + DRAW,
-                _ => SCISSORS + DRAW,
-            },
-            _ => match player1 {
-                Some('A') => PAPER + WIN,
-                Some('B') => SCISSORS + WIN,
-                _ => ROCK + WIN,
-            },
-        };
-    }
-    Ok(total)
+fn play_game(puzzle_lines: &[String], game_strategy: &dyn Fn(&str, &str) -> usize) -> Result<usize, Box<dyn Error>> {
+    Ok(puzzle_lines.iter().map(|s| game_strategy(&s[0..1], &s[2..3])).sum())
+}
+
+fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    play_game(puzzle_lines, &game_strategy_1)
+}
+
+fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    play_game(puzzle_lines, &game_strategy_2)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

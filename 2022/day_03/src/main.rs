@@ -29,10 +29,10 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut total = 0;
     let mut set = HashSet::new();
     for (i, line) in puzzle_lines.iter().enumerate() {
-        let line_set: HashSet<char> = line.chars().collect();
+        let chars: HashSet<_> = line.chars().collect();
         set = match set.is_empty() {
-            true => line_set.clone(),
-            false => set.intersection(&line_set).copied().collect(),
+            true => chars,
+            false => set.intersection(&chars).copied().collect(),
         };
         if (i + 1) % 3 == 0 {
             total += value(&set);

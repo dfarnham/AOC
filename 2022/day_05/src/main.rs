@@ -11,7 +11,6 @@ fn build_stacks(puzzle_lines: &[String]) -> BTreeMap<usize, Vec<char>> {
         }
         for (i, c) in line.chars().skip(1).step_by(4).enumerate() {
             if c != ' ' {
-                //let v = stacks.entry(i).or_insert(vec![]);
                 let v: &mut Vec<char> = stacks.entry(i).or_default();
                 v.insert(0, c)
             }
@@ -72,17 +71,11 @@ fn move_crates(
         .join(""))
 }
 
-fn part1(
-    puzzle_lines: &[String],
-    stacks: &BTreeMap<usize, Vec<char>>,
-) -> Result<String, Box<dyn Error>> {
+fn part1(puzzle_lines: &[String], stacks: &BTreeMap<usize, Vec<char>>) -> Result<String, Box<dyn Error>> {
     move_crates(puzzle_lines, stacks, 1)
 }
 
-fn part2(
-    puzzle_lines: &[String],
-    stacks: &BTreeMap<usize, Vec<char>>,
-) -> Result<String, Box<dyn Error>> {
+fn part2(puzzle_lines: &[String], stacks: &BTreeMap<usize, Vec<char>>) -> Result<String, Box<dyn Error>> {
     move_crates(puzzle_lines, stacks, 2)
 }
 

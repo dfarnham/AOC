@@ -58,16 +58,43 @@ fn game_strategy_2(player1: &str, player2: &str) -> usize {
     }
 }
 
-fn play_game(puzzle_lines: &[String], game_strategy: &dyn Fn(&str, &str) -> usize) -> Result<usize, Box<dyn Error>> {
+// Variation on are receiving a function argument
+// ==============================================
+//
+// static dispatch
+fn play_game_static(
+    puzzle_lines: &[String],
+    game_strategy: &impl Fn(&str, &str) -> usize,
+) -> Result<usize, Box<dyn Error>> {
     Ok(puzzle_lines.iter().map(|s| game_strategy(&s[0..1], &s[2..3])).sum())
 }
 
+// dynamic dispatch
+fn play_game_dynamic(
+    puzzle_lines: &[String],
+    game_strategy: &dyn Fn(&str, &str) -> usize,
+) -> Result<usize, Box<dyn Error>> {
+    Ok(puzzle_lines.iter().map(|s| game_strategy(&s[0..1], &s[2..3])).sum())
+}
+
+// C-like pointer to function
+fn play_game_funcptr(puzzle_lines: &[String], game_strategy: fn(&str, &str) -> usize) -> Result<usize, Box<dyn Error>> {
+    Ok(puzzle_lines.iter().map(|s| game_strategy(&s[0..1], &s[2..3])).sum())
+}
+
+// ==============================================
+//
 fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    play_game(puzzle_lines, &game_strategy_1)
+    let a = play_game_static(puzzle_lines, &game_strategy_1)?;
+    let b = play_game_dynamic(puzzle_lines, &game_strategy_1)?;
+    let c = play_game_funcptr(puzzle_lines, game_strategy_1)?;
+    assert_eq!(a, b);
+    assert_eq!(b, c);
+    Ok(c)
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    play_game(puzzle_lines, &game_strategy_2)
+    play_game_static(puzzle_lines, &game_strategy_2)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

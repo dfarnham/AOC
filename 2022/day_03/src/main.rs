@@ -1,4 +1,5 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
+use itertools::Itertools;
 use std::collections::HashSet;
 use std::error::Error;
 use std::io::{self, Write};
@@ -25,7 +26,29 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
         .sum())
 }
 
+// itertools chunk() followed by reduce() from https://fasterthanli.me/series/advent-of-code-2022/part-3
+// is much nicer than my original [ renamed to part2_orig() below ]
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    Ok(puzzle_lines
+        .iter()
+        .map(|line| line.chars().collect::<HashSet<_>>())
+        .chunks(3)
+        .into_iter()
+        .map(|chunks| {
+            chunks
+                .reduce(|a, b| a.intersection(&b).copied().collect())
+                .expect("3 chunks")
+        })
+        .map(|set| value(&set))
+        .sum())
+}
+
+// not really dead, I'm still using it in a test
+//
+// fwiw: if I were to get rid of this I could change the value() function to
+// consume the set and the call map(value) above instead of map(|set| value(&set))
+#[allow(dead_code)]
+fn part2_orig(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut total = 0;
     let mut set = HashSet::new();
     for (i, line) in puzzle_lines.iter().enumerate() {
@@ -94,6 +117,7 @@ mod tests {
     fn part2_example() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example");
         assert_eq!(part2(&puzzle_lines)?, 70);
+        assert_eq!(part2(&puzzle_lines)?, part2_orig(&puzzle_lines)?);
         Ok(())
     }
 
@@ -101,6 +125,7 @@ mod tests {
     fn part2_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual");
         assert_eq!(part2(&puzzle_lines)?, 2276);
+        assert_eq!(part2(&puzzle_lines)?, part2_orig(&puzzle_lines)?);
         Ok(())
     }
 }

@@ -89,6 +89,7 @@ where
 }
 
 // This should be called in cli apps
+#[cfg(unix)]
 pub fn reset_sigpipe() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_family = "unix")]
     {
@@ -100,6 +101,10 @@ pub fn reset_sigpipe() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+#[cfg(not(unix))]
+pub fn reset_sigpipe() -> Result<(), Box<dyn std::error::Error>> {
+    // no-op
 }
 
 // Simple clap-4 arg parser

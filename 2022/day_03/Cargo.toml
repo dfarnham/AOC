@@ -9,5 +9,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-general = { path = "../../general" }
-itertools = "0.10.5"
+general = { workspace = true }
+itertools = { workspace = true }

@@ -28,3 +28,11 @@ members = [
 #   "day_24",
 #   "day_25",
 ]
+
+[workspace.dependencies]
+general = { path = "../general" }
+itertools = "0.10.5"
+ndarray = "0.15.6"
+num-integer = "0.1.45"
+rayon = "1.6.1"
+regex = "1.7"

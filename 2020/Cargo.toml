@@ -28,3 +28,9 @@ members = [
     "day_24",
     "day_25",
 ]
+
+[workspace.dependencies]
+general = { path = "../general" }
+ndarray = "0.15.6"
+rand = "0.8.5"
+regex = "1.7"

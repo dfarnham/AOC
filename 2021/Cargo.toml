@@ -30,8 +30,8 @@ members = [
 ]
 
 [workspace.dependencies]
-counter = "0.5.7"
+counter = "0.5"
 general = { path = "../general" }
-ndarray = "0.15.6"
+ndarray = "0.15"
 rayon = "1.7"
 regex = "1.9"

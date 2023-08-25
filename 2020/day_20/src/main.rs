@@ -394,7 +394,6 @@ fn solution2(data: &[String]) -> usize {
             for j in 0..array.ncols() {
                 if array[[i, j]] {
                     grid[[r + i, c + j]] = true;
-                } else {
                 }
             }
         }

@@ -91,7 +91,7 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut moons = get_data(puzzle_lines)?;
     let mut velocity = vec![(0, 0, 0); moons.len()];
     let mut visited = vec![HashSet::new(); 3];
-    let mut cycles = vec![None; 3];
+    let mut cycles = [None; 3];
 
     // cycles is a vector initialized to None
     // loop until all cycles are Some(iteration count)

@@ -96,7 +96,7 @@ fn part1(puzzle_lines: &[String]) -> Result<String, Box<dyn Error>> {
         total /= 5;
 
         output = match rem {
-            0 | 1 | 2 => rem.to_string() + &output,
+            0..=2 => rem.to_string() + &output,
             3 => "=".to_string() + &output,
             _ => "-".to_string() + &output,
         };

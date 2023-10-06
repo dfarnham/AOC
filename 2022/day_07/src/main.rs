@@ -37,7 +37,7 @@ fn build_filesystem_view(commands: &[String]) -> Result<BTreeMap<String, Item>, 
         if line.starts_with("$ cd") {
             // update path
             match &line[5..] {
-                arg if arg == ".." => { path.pop(); }
+                ".." => { path.pop(); }
                 arg => { path.push(arg); }
             }
 

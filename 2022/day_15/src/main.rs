@@ -220,11 +220,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // guess input is input-example or input-actual by length
     let arg1 = match puzzle_lines.len() {
-        n if n == 24 => 2000000,
+        24 => 2000000,
         _ => 10,
     };
     let arg2 = match puzzle_lines.len() {
-        n if n == 24 => 4000000,
+        24 => 4000000,
         _ => 20,
     };
     writeln!(stdout, "Answer Part 1 = {}", part1(&puzzle_lines, arg1)?)?;

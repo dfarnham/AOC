@@ -28,8 +28,8 @@ fn build_re(key: &str, rules: &HashMap<String, Vec<Vec<String>>>) -> String {
                         let before = build_re(&v[1][0], rules);
                         let after = build_re(&v[1][2], rules);
 
-                        // hedge that 9 symmetrical before/after surrounding v[0] will suffice
-                        for i in 1..9 {
+                        // hedge that 4 symmetrical before/after surrounding v[0] will suffice
+                        for i in 1..4 {
                             s2.push_str(&format!("|{before}{{{i}}}{s1}{after}{{{i}}}"));
                         }
                     }

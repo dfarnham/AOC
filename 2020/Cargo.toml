@@ -34,4 +34,4 @@ members = [
 general = { path = "../general" }
 ndarray = "0.15"
 rand = "0.8"
-regex = "1.9"
+regex = "1.10"

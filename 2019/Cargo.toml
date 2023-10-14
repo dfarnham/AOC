@@ -35,5 +35,5 @@ general = { path = "../general" }
 itertools = "0.11"
 ndarray = "0.15"
 num-integer = "0.1"
-rayon = "1.7"
-regex = "1.9"
+rayon = "1.8"
+regex = "1.10"

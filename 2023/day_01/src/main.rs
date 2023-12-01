@@ -14,25 +14,35 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 }
 
 fn solve(puzzle_lines: &[String], p2: bool) -> Result<usize, Box<dyn Error>> {
-    let mut lookup: HashMap<_, _> = (1..=9).map(|c| (c.to_string(), c)).collect();
+    // a map of digit-String to digit-usize
+    let mut numbers: HashMap<_, _> = (1..=9).map(|c| (c.to_string(), c)).collect();
 
-    // add spelled numbers to the lookup hash for part2
+    // add spelled numbers to the map for part2
     if p2 {
-        for (i, number) in SPELLED_NUMBERS.split_whitespace().enumerate() {
-            lookup.insert(number.into(), i + 1);
+        for (i, spelled_number) in SPELLED_NUMBERS.split_whitespace().enumerate() {
+            numbers.insert(spelled_number.into(), i + 1);
         }
     }
 
-    let mut numbers = vec![];
+    let mut total = 0;
     for line in puzzle_lines {
-        let digits: Vec<_> = (0..line.len())
-            .filter_map(|i| lookup.keys().find(|k| line[i..].starts_with(*k)))
+        // Algorithm:
+        //
+        // 1. loop while the line has characters
+        //      if the line begins with a hash-key, e.g. ["1", "2", ..., "eight", "nine"]
+        //          append the key to a `found_keys` list
+        //      shrink the line by removing the first character (line[i..]) and continue looping
+        //
+        // 2. take the first and last items from `found_keys` to form a 2-digit number and add to total
+        //    Note: list.first(), list.last() will reference the same element on a list with 1 element
+        let found_keys: Vec<_> = (0..line.len())
+            .filter_map(|i| numbers.keys().find(|k| line[i..].starts_with(*k)))
             .collect();
-        if let (Some(first), Some(last)) = (digits.first(), digits.last()) {
-            numbers.push(lookup[*first] * 10 + lookup[*last]);
+        if let (Some(first), Some(last)) = (found_keys.first(), found_keys.last()) {
+            total += numbers[*first] * 10 + numbers[*last];
         }
     }
-    Ok(numbers.iter().sum())
+    Ok(total)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

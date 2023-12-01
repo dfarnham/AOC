@@ -17,8 +17,11 @@ where
         window
     );
 
-    (0..(array.len() - window))
-        .filter(|&i| array[i..(i + window)].iter().sum::<T>() < array[(i + 1)..=(i + window)].iter().sum::<T>())
+    array
+        .windows(window)
+        .collect::<Vec<_>>()
+        .windows(2)
+        .filter(|w| w[0].iter().sum::<T>() < w[1].iter().sum::<T>())
         .count()
 }
 

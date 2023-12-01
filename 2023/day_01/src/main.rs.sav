@@ -1,0 +1,131 @@
+use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
+use std::error::Error;
+use std::io::{self, Write};
+
+fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    Ok(puzzle_lines
+        .iter()
+        .map(|line| line.chars().filter(|c| c.is_ascii_digit()).collect::<String>())
+        .collect::<Vec<_>>()
+        .iter()
+        .filter(|s| !s.is_empty())
+        .map(|s| match s.len() == 1 {
+            true => format!("{s}{s}").parse::<usize>().unwrap(),
+            false => format!("{}{}", &s[0..1], &s[s.len() - 1..]).parse::<usize>().unwrap()
+        })
+        .sum::<usize>())
+}
+
+fn part22(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    let mut result = vec![];
+    for line in puzzle_lines {
+        let mut line = line.to_string();
+        for (n, word) in ["one", "two", "three", "four", "five", "six", "seven", "nine"].iter().enumerate() {
+        //for (n, word) in [(8, "eight"), (2,"two"), (1, "one"), (3,"three"), (4,"four"), (5,"five"), (6,"six"), (7,"seven"), (9, "nine")] {
+            if line.starts_with(word) {
+                //line = format!("{}{}", n+1, line[word.len()..].to_string());
+                line = format!("{}{}", n+1, line[1..].to_string());
+            }
+        }
+        result.push(line);
+    }
+    println!("{result:?}");
+    part1(&result)
+}
+fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    let mut result = vec![];
+    let mut res = String::new();
+    for line in puzzle_lines {
+        let mut line = line.to_string();
+        while !line.is_empty() {
+            if line.starts_with('1') || line.starts_with("one") {
+                res += "1";
+            } else if line.starts_with('2') || line.starts_with("two") {
+                res += "2";
+            } else if line.starts_with('3') || line.starts_with("three") {
+                res += "3";
+            } else if line.starts_with('4') || line.starts_with("four") {
+                res += "4";
+            } else if line.starts_with('5') || line.starts_with("five") {
+                res += "5";
+            } else if line.starts_with('6') || line.starts_with("six") {
+                res += "6";
+            } else if line.starts_with('7') || line.starts_with("seven") {
+                res += "7";
+            } else if line.starts_with('8') || line.starts_with("eight") {
+                res += "8";
+            } else if line.starts_with('9') || line.starts_with("nine") {
+                res += "9";
+            }
+            line = line[1..].to_string();
+        }
+        result.push(res.clone());
+        res = "".to_string();
+    }
+    part1(&result)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    // behave like a typical unix utility
+    reset_sigpipe()?;
+    let mut stdout = io::stdout().lock();
+
+    // parse command line arguments
+    let args = get_args();
+
+    // read puzzle data into a list of String
+    let puzzle_lines = read_trimmed_data_lines(args.get_one::<std::path::PathBuf>("FILE"))?;
+
+    // start a timer
+    let timer = std::time::Instant::now();
+
+    // ==============================================================
+
+    let n = part1(&puzzle_lines)?;
+    writeln!(stdout, "Answer Part 1 = {n}")?;
+    let n = part2(&puzzle_lines)?;
+    writeln!(stdout, "Answer Part 2 = {n}")?;
+
+    if args.get_flag("time") {
+        writeln!(stdout, "Total Runtime: {:?}", timer.elapsed())?;
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn get_data(filename: &str) -> Vec<String> {
+        let file = std::path::PathBuf::from(filename);
+        read_trimmed_data_lines(Some(&file)).unwrap()
+    }
+
+    #[test]
+    fn part1_example() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example");
+        assert_eq!(part1(&puzzle_lines)?, 142);
+        Ok(())
+    }
+
+    #[test]
+    fn part1_actual() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-actual");
+        assert_eq!(part1(&puzzle_lines)?, 55090);
+        Ok(())
+    }
+
+    #[test]
+    fn part2_example() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example2");
+        assert_eq!(part2(&puzzle_lines)?, 281);
+        Ok(())
+    }
+
+    #[test]
+    fn part2_actual() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-actual");
+        assert_eq!(part2(&puzzle_lines)?, 54845);
+        Ok(())
+    }
+}

@@ -74,7 +74,7 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
         .map(|line| id_max_vals(line))
         .filter(|(_, red, green, blue)| red <= &12 && green <= &13 && blue <= &14)
         .map(|tup| tup.0)
-        .sum::<usize>())
+        .sum())
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {

@@ -7,14 +7,12 @@ use std::io::{self, Write};
 //         (1 /* game id */, max(4, 1, 0), max(0, 2, 2), max(3, 0, 6)
 //         (1, 4, 2, 6)
 fn id_max_vals(line: &str) -> (usize, usize, usize, usize) {
-    let parts: Vec<_> = line.split(':').take(2).collect();
-    let id = parts[0].split_whitespace().last().unwrap().parse::<usize>().unwrap();
+    // we can remove punctuation, skip over "Game", grab the id, then split on whitespace and walk by pairs
+    let line = line.replace([':', ';', ','], "");
+    let tokens: Vec<_> = line.split_whitespace().skip(1).collect();
+    let id = tokens[0].parse::<usize>().unwrap();
 
-    // we can remove all semi-colons and commas then split on whitespace and walk by pairs
-    let grabs = parts[1].replace([';', ','], "");
-    grabs
-        .split_whitespace()
-        .collect::<Vec<_>>()
+    tokens[1..]
         .windows(2)
         .step_by(2)
         .map(|w| (w[0].parse::<usize>().unwrap(), w[1]))

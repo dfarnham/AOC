@@ -3,7 +3,7 @@ name = "day_02"
 version = "0.1.0"
 authors = ["Dave Farnham <dave.farnham@icloud.com>"]
 categories = ["command-line-utilities"]
-description = ": https://adventofcode.com/2023/day/2"
+description = "Cube Conundrum: https://adventofcode.com/2023/day/2"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

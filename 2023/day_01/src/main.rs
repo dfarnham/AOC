@@ -76,42 +76,42 @@ fn main() -> Result<(), Box<dyn Error>> {
 mod tests {
     use super::*;
 
-    fn get_data(filename: &str) -> Vec<String> {
+    fn get_data(filename: &str) -> Result<Vec<String>, Box<dyn Error>> {
         let file = std::path::PathBuf::from(filename);
-        read_trimmed_data_lines(Some(&file)).unwrap()
+        Ok(read_trimmed_data_lines(Some(&file))?)
     }
 
     #[test]
     fn part1_example() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example");
+        let puzzle_lines = get_data("input-example")?;
         assert_eq!(part1(&puzzle_lines)?, 142);
         Ok(())
     }
 
     #[test]
     fn part1_example2() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example2");
+        let puzzle_lines = get_data("input-example2")?;
         assert_eq!(part1(&puzzle_lines)?, 209);
         Ok(())
     }
 
     #[test]
     fn part1_actual() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-actual");
+        let puzzle_lines = get_data("input-actual")?;
         assert_eq!(part1(&puzzle_lines)?, 55090);
         Ok(())
     }
 
     #[test]
     fn part2_example2() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-example2");
+        let puzzle_lines = get_data("input-example2")?;
         assert_eq!(part2(&puzzle_lines)?, 281);
         Ok(())
     }
 
     #[test]
     fn part2_actual() -> Result<(), Box<dyn Error>> {
-        let puzzle_lines = get_data("input-actual");
+        let puzzle_lines = get_data("input-actual")?;
         assert_eq!(part2(&puzzle_lines)?, 54845);
         Ok(())
     }

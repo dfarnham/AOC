@@ -35,8 +35,7 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     Ok(num_wins(puzzle_lines)
         .into_iter()
         .fold((0, 0, HashMap::new()), |(acc, i, mut counter), n| {
-            *counter.entry(i).or_insert(0) += 1;
-            let count = counter[&i];
+            let count = counter.remove(&i).unwrap_or(0) + 1;
             for j in i + 1..i + 1 + n {
                 *counter.entry(j).or_insert(0) += count;
             }

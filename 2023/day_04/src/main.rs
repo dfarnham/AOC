@@ -44,6 +44,7 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
         .0)
 }
 
+#[allow(dead_code)]
 fn part2_orig(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut counter = HashMap::new();
     for (i, n) in num_wins(puzzle_lines).iter().enumerate() {

@@ -4,6 +4,13 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::io::{self, Write};
 
+/// PartNumber - field data about a part-number in the grid
+/// postion: (i,j)
+/// numeric value: n
+///
+/// methods
+///   len(): number of digits
+///   adjacents(): surrounding coordinates within the grid that touch the number
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 struct PartNumber {
     i: usize, // i coordinate
@@ -47,7 +54,7 @@ fn get_grid(data: &[String]) -> Array2<char> {
 }
 
 fn part_numbers_in_grid(grid: &Array2<char>) -> Vec<PartNumber> {
-    let digits_to_num = |digits: &[u32]| digits.iter().fold(0, |acc, d| acc * 10 + *d as usize);
+    let numeric = |digits: &[u32]| digits.iter().fold(0, |acc, d| acc * 10 + *d as usize);
 
     let (nrow, ncol) = grid.dim();
     let mut part_numbers = vec![];
@@ -59,12 +66,12 @@ fn part_numbers_in_grid(grid: &Array2<char>) -> Vec<PartNumber> {
             if c.is_ascii_digit() {
                 digits.push(c.to_digit(10).expect("char digit"));
             } else if !digits.is_empty() {
-                part_numbers.push(PartNumber::new(i, j - digits.len(), digits_to_num(&digits)));
+                part_numbers.push(PartNumber::new(i, j - digits.len(), numeric(&digits)));
                 digits.clear();
             }
         }
         if !digits.is_empty() {
-            part_numbers.push(PartNumber::new(i, ncol - 1 - digits.len(), digits_to_num(&digits)));
+            part_numbers.push(PartNumber::new(i, ncol - 1 - digits.len(), numeric(&digits)));
         }
     }
     part_numbers

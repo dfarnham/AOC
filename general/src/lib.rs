@@ -36,6 +36,21 @@ where
     Ok(parsed_splits)
 }
 
+// splits and trims the input String on a separator character
+// returns a Vec of parse::<T>() over the splits
+pub fn trim_split_ws<T>(text: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>
+where
+    T: std::str::FromStr,
+    <T as std::str::FromStr>::Err: std::error::Error,
+    <T as std::str::FromStr>::Err: 'static,
+{
+    let mut parsed_splits = vec![];
+    for s in text.split_whitespace() {
+        parsed_splits.push(s.parse::<T>()?)
+    }
+    Ok(parsed_splits)
+}
+
 // Reads the lines of a file, trims and returns them as a Vec of the supplied type
 pub fn read_trimmed_data_lines<T>(
     filename: Option<&PathBuf>,

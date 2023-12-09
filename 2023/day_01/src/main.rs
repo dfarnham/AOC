@@ -14,8 +14,8 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 }
 
 fn solve(puzzle_lines: &[String], p2: bool) -> Result<usize, Box<dyn Error>> {
-    // a map of digit-String to digit-usize
-    let mut numbers: HashMap<_, _> = (1..=9).map(|c| (c.to_string(), c)).collect();
+    // a map of digits in string form to digit values
+    let mut numbers = HashMap::<_, _>::from_iter((1..=9).map(|c| (c.to_string(), c)));
 
     // add spelled numbers to the map for part2
     if p2 {
@@ -24,25 +24,25 @@ fn solve(puzzle_lines: &[String], p2: bool) -> Result<usize, Box<dyn Error>> {
         }
     }
 
-    let mut total = 0;
-    for line in puzzle_lines {
-        // Algorithm:
-        //
-        // 1. loop while the line has characters
-        //      if the line begins with a hash-key, e.g. ["1", "2", ..., "eight", "nine"]
-        //          append the key to a `found_keys` list
-        //      shrink the line by removing the first character (line[i..]) and continue looping
-        //
-        // 2. take the first and last items from `found_keys` to form a 2-digit number and add to total
-        //    Note: list.first(), list.last() will reference the same element on a list with 1 element
-        let found_keys: Vec<_> = (0..line.len())
-            .filter_map(|i| numbers.keys().find(|k| line[i..].starts_with(*k)))
-            .collect();
-        if let (Some(first), Some(last)) = (found_keys.first(), found_keys.last()) {
-            total += numbers[*first] * 10 + numbers[*last];
-        }
-    }
-    Ok(total)
+    Ok(puzzle_lines
+        .iter()
+        .map(|line| {
+            // loop while the line has characters
+            //   if the line begins with a hash-key, e.g. ["1", "2", ..., "eight", "nine"]
+            //       append the key to `found_keys`
+            //   shrink the line by removing the first character (line[i..]) and continue looping
+            let found_keys: Vec<_> = (0..line.len())
+                .filter_map(|i| numbers.keys().find(|k| line[i..].starts_with(*k)))
+                .collect();
+
+            // take the (first, last) items from `found_keys` to form a 2-digit number and emit
+            // Note: list.first(), list.last() correctly references the same element on 1-element list
+            match (found_keys.first(), found_keys.last()) {
+                (Some(first), Some(last)) => numbers[*first] * 10 + numbers[*last],
+                _ => 0,
+            }
+        })
+        .sum())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

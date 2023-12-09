@@ -19,7 +19,7 @@ fn num_wins(puzzle_lines: &[String]) -> Vec<usize> {
                 halves.1.split_whitespace().collect::<HashSet<_>>(),
             )
         })
-        .map(|(winners, others)| winners.intersection(&others).collect::<Vec<_>>().len())
+        .map(|(winners, others)| winners.intersection(&others).count())
         .collect()
 }
 

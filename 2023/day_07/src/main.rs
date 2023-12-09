@@ -28,23 +28,14 @@ fn score(num_jokers: usize, hand: &[usize]) -> usize {
     match num_jokers {
         0 => match ctr.len() {
             1 => 6,
-            2 => match ctr[0].1 {
-                4 => 5,
-                _ => 4,
-            },
-            3 => match ctr[0].1 {
-                3 => 3,
-                _ => 2,
-            },
+            2 => 4.max(ctr[0].1 + 1),
+            3 => 2.max(ctr[0].1),
             4 => 1,
             _ => 0,
         },
         1 => match ctr.len() {
             1 => 6,
-            2 => match ctr[0].1 {
-                3 => 5,
-                _ => 4,
-            },
+            2 => 4.max(ctr[0].1 + 2),
             3 => 3,
             _ => 1,
         },
@@ -53,10 +44,7 @@ fn score(num_jokers: usize, hand: &[usize]) -> usize {
             2 => 5,
             _ => 3,
         },
-        3 => match ctr.len() {
-            1 => 6,
-            _ => 5,
-        },
+        3 => 5.max(5+ctr.len()),
         _ => 6,
     }
 }

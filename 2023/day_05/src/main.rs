@@ -2,14 +2,13 @@ use general::{get_args, read_trimmed_data_lines, reset_sigpipe, trim_split_ws};
 use std::error::Error;
 use std::io::{self, Write};
 
-#[derive(Debug, PartialEq, Hash)]
 struct SeedMap {
-    name: String,
+    _name: String,
     transforms: Vec<(usize, usize, usize)>, // destination range start, source range start, range length
 }
 impl SeedMap {
-    fn new(name: String, transforms: Vec<(usize, usize, usize)>) -> Self {
-        Self { name, transforms }
+    fn new(_name: String, transforms: Vec<(usize, usize, usize)>) -> Self {
+        Self { _name, transforms }
     }
 
     fn value(&self, x: usize) -> usize {

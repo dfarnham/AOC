@@ -17,8 +17,8 @@ fn solution(puzzle_lines: &[String], p1: bool) -> Result<i64, Box<dyn Error>> {
         }
 
         let value = sequences.iter().rev().fold(0, |acc, seq| match p1 {
-            true => acc + *seq.last().unwrap(),
-            false => *seq.first().unwrap() - acc,
+            true => acc + seq.last().unwrap(),
+            false => seq.first().unwrap() - acc,
         });
         extrapolated.push(value);
     }

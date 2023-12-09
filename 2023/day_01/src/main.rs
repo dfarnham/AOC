@@ -27,15 +27,12 @@ fn solve(puzzle_lines: &[String], p2: bool) -> Result<usize, Box<dyn Error>> {
     Ok(puzzle_lines
         .iter()
         .map(|line| {
-            // loop while the line has characters
-            //   if the line begins with a hash-key, e.g. ["1", "2", ..., "eight", "nine"]
-            //       append the key to `found_keys`
-            //   shrink the line by removing the first character (line[i..]) and continue looping
+            // test all the line slices for hash keys e.g. ["1", "2", ..., "eight", "nine"]
             let found_keys: Vec<_> = (0..line.len())
                 .filter_map(|i| numbers.keys().find(|k| line[i..].starts_with(*k)))
                 .collect();
 
-            // take the (first, last) items from `found_keys` to form a 2-digit number and emit
+            // take the (first, last) keys from `found_keys` to form a 2-digit number and emit
             // Note: list.first(), list.last() correctly references the same element on 1-element list
             match (found_keys.first(), found_keys.last()) {
                 (Some(first), Some(last)) => numbers[*first] * 10 + numbers[*last],

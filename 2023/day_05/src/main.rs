@@ -21,6 +21,34 @@ impl SeedMap {
         }
         x
     }
+
+    // https://github.com/jonathanpaulson/AdventOfCode/blob/master/2023/5.py
+    fn range_value(&self, x: &[(usize, usize)]) -> Vec<(usize, usize)> {
+        let mut a = vec![];
+        let mut r = x.to_owned();
+        for m in self.transforms.iter() {
+            let (d, s, n) = m;
+            let src_end = s + n;
+            let mut nr = vec![];
+            while let Some((st, ed)) = r.pop() {
+                let before = (st, ed.min(*s));
+                let inter = (st.max(*s), ed.min(src_end));
+                let after = (src_end.max(st), ed);
+                if before.1 > before.0 {
+                    nr.push(before);
+                }
+                if inter.1 > inter.0 {
+                    a.push((inter.0 - s + d, inter.1 - s + d));
+                }
+                if after.1 > after.0 {
+                    nr.push(after);
+                }
+            }
+            r = nr;
+        }
+        a.extend(r);
+        a
+    }
 }
 
 fn get_seed_maps(puzzle_lines: &[String]) -> Result<Vec<SeedMap>, Box<dyn Error>> {
@@ -52,20 +80,35 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
         .ok_or(Box::<dyn Error>::from("min failed"))
 }
 
-// Brute force solution which takes 2 minutes to complete so I'll circle back on this one
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    let seeds: Vec<usize> = trim_split_ws(puzzle_lines[0].split_once(':').unwrap().1)?;
+    let seed_maps: Vec<_> = get_seed_maps(puzzle_lines)?;
+
+    Ok(seeds
+        .windows(2)
+        .step_by(2)
+        .flat_map(|w| {
+            seed_maps
+                .iter()
+                .fold(vec![(w[0], w[0] + w[1])], |acc, sm| sm.range_value(&acc))
+        })
+        .min()
+        .expect("min failed")
+        .0)
+}
+
+// Brute force solution which takes 2 minutes to complete so I'll circle back on this one
+#[allow(dead_code)]
+fn part2_brute_force(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let seeds = trim_split_ws(puzzle_lines[0].split_once(':').unwrap().1)?;
     let seed_maps = get_seed_maps(puzzle_lines)?;
 
-    match puzzle_lines.len() > 50 {
-        true => Ok(81956384),
-        false => Ok(seeds
-            .windows(2)
-            .step_by(2)
-            .flat_map(|w| (w[0]..(w[0] + w[1])).map(|seed| seed_maps.iter().fold(seed, |acc, sm| sm.value(acc))))
-            .min()
-            .expect("min failed")),
-    }
+    Ok(seeds
+        .windows(2)
+        .step_by(2)
+        .flat_map(|w| (w[0]..(w[0] + w[1])).map(|seed| seed_maps.iter().fold(seed, |acc, sm| sm.value(acc))))
+        .min()
+        .expect("min failed"))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

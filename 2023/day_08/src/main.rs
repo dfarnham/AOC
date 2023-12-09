@@ -17,20 +17,20 @@ fn solution(puzzle_lines: &[String], p1: bool) -> Result<usize, Box<dyn Error>> 
         let mut workq = VecDeque::from([(directions.pop_front(), &nodes[start])]);
         let mut steps = 0;
 
-        while let Some((d, choices)) = workq.pop_front() {
+        while let Some((Some(d), choices)) = workq.pop_front() {
+            directions.push_back(d); // circular list of directions
             steps += 1;
 
             let (left, right) = choices;
-            if d == Some('L') && left == end || d == Some('R') && right == end {
+            if d == 'L' && left == end || d == 'R' && right == end {
                 break;
             }
 
-            if d == Some('L') {
+            if d == 'L' {
                 workq.push_back((directions.pop_front(), &nodes[left]));
             } else {
                 workq.push_back((directions.pop_front(), &nodes[right]));
             }
-            directions.push_back(d.unwrap());
         }
 
         Ok(steps)
@@ -43,6 +43,7 @@ fn solution(puzzle_lines: &[String], p1: bool) -> Result<usize, Box<dyn Error>> 
             let mut dir = orig_directions.clone();
             let mut key = item.clone();
             while let Some(d) = dir.pop_front() {
+                dir.push_back(d); // circular list of directions
                 *steps_z.entry(item).or_insert(0) += 1;
                 key = match d == 'L' {
                     true => nodes[&key].0.clone(),
@@ -51,7 +52,6 @@ fn solution(puzzle_lines: &[String], p1: bool) -> Result<usize, Box<dyn Error>> 
                 if key.ends_with('Z') {
                     break;
                 }
-                dir.push_back(d);
             }
         }
         let lcm = steps_z.values().copied().reduce(num_integer::lcm).expect("lcm error");

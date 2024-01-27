@@ -1,128 +1,99 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe};
-use ndarray::{Array, Array2, ArrayView};
-use std::collections::HashSet;
+use pathfinding::matrix::*;
+use pathfinding::prelude::dijkstra_partial;
+use std::collections::{BTreeSet, HashSet};
 use std::error::Error;
 use std::io::{self, Write};
 
-fn get_grid(data: &[String]) -> Array2<u32> {
-    // row parsing rules for data[String]
-    let get_row = |s: &str| {
-        s.chars()
-            .map(|s| s.to_string().parse::<u32>().unwrap())
-            .collect::<Vec<_>>()
-    };
+type Point = (usize, usize);
 
-    // use data[0] to size the new Array2
-    let mut grid = Array::zeros((0, data[0].len()));
-
-    // process data[..]
-    for line in data {
-        grid.push_row(ArrayView::from(&get_row(line))).unwrap();
-    }
-    grid
+fn row_values(s: &str) -> Vec<usize> {
+    s.chars().map(|c| c.to_digit(10).unwrap() as usize).collect()
 }
 
-fn extend_row_right(row: &[u32]) -> Vec<u32> {
-    let mut erow = row.to_vec();
-    for i in 0..4 {
-        erow.extend(row.iter().map(|n| (*n + i) % 9 + 1).collect::<Vec<_>>());
-    }
-    erow
+fn get_grid(data: &[String]) -> Result<Matrix<usize>, Box<dyn Error>> {
+    Ok(Matrix::from_rows(data.iter().map(|line| row_values(line)))?)
 }
 
-fn get_grid_x5(data: &[String]) -> Array2<u32> {
-    // row parsing rules for data[String]
-    let get_row = |s: &str| {
-        s.chars()
-            .map(|s| s.to_string().parse::<u32>().unwrap())
-            .collect::<Vec<_>>()
+fn get_grid_x5(data: &[String]) -> Result<Matrix<usize>, Box<dyn Error>> {
+    let extend_row_right = |row: &[usize]| -> Vec<usize> {
+        let mut erow = row.to_vec();
+        for i in 0..4 {
+            erow.extend(row.iter().map(|n| (*n + i) % 9 + 1).collect::<Vec<_>>());
+        }
+        erow
     };
 
-    // use data[0] to size the new Array2
-    let row = extend_row_right(&get_row(&data[0]));
-    let mut grid = Array::zeros((0, row.len()));
-    grid.push_row(ArrayView::from(&row)).unwrap();
-
-    // process remaining data[1..]
-    for line in &data[1..] {
-        grid.push_row(ArrayView::from(&extend_row_right(&get_row(line))))
-            .unwrap();
-    }
-    for i in 1..5 {
+    let mut v = vec![];
+    for i in 0..5 {
         for line in data {
-            let mut row = extend_row_right(&get_row(line));
+            let mut row = extend_row_right(&row_values(line));
             for _ in 0..i {
                 row = row.iter().map(|n| *n % 9 + 1).collect();
             }
-            grid.push_row(ArrayView::from(&row)).unwrap();
-        }
-    }
-    grid
-}
-
-fn get_adjacents(grid: &Array2<u32>, position: (usize, usize)) -> Vec<(usize, usize)> {
-    let (i, j) = (position.0 as i32, position.1 as i32);
-    let range = &0..&(grid.nrows() as i32);
-    [
-        (i, j + 1),
-        (i + 1, j),
-        (i - 1, j),
-        (i, j - 1),
-        //(i - 1, j - 1),
-        //(i - 1, j + 1),
-        //(i + 1, j - 1),
-        //(i + 1, j + 1),
-    ]
-    .iter()
-    .filter(|(r, c)| range.contains(&r) && range.contains(&c))
-    .map(|(r, c)| (*r as usize, *c as usize))
-    .collect::<Vec<(_, _)>>()
-}
-
-fn calc_risk(
-    current: (usize, usize),
-    scored: &HashSet<(usize, usize)>,
-    level: usize,
-    score: u32,
-    best_score: &mut u32,
-    risk: &Array2<u32>,
-) {
-    for pt in get_adjacents(risk, current) {
-        let sc = score + risk[[pt.0, pt.1]];
-        if sc < *best_score {
-            if scored.contains(&pt) {
-                *best_score = sc;
-            } else if level < 4 {
-                // empirically cheating on recursion depth
-                calc_risk(pt, scored, level + 1, sc, best_score, risk);
-            }
-        }
-    }
-}
-
-fn solution(grid: &Array2<u32>, start: (usize, usize), finish: (usize, usize)) -> u32 {
-    let mut scored = HashSet::<(usize, usize)>::from_iter(vec![start]);
-    let mut risk = grid.clone();
-
-    for i in 1..grid.nrows() {
-        let mut edge = vec![];
-        for j in 0..i {
-            edge.push((i, j));
-            edge.push((j, i));
-        }
-        edge.push((i, i));
-
-        for pt in edge {
-            let mut best_score = u32::MAX;
-            let score = risk[[pt.0, pt.1]];
-            calc_risk(pt, &scored, 0, score, &mut best_score, &risk);
-            risk[[pt.0, pt.1]] = best_score;
-            scored.insert(pt);
+            v.extend(row);
         }
     }
 
-    //println!("risk =\n{:?}", risk);
-    risk[[finish.0, finish.1]] - risk[[start.0, start.1]]
+    Ok(Matrix::from_vec(data.len() * 5, data[0].len() * 5, v)?)
+}
+
+#[allow(dead_code)]
+fn solution2(graph: &Matrix<usize>) -> usize {
+    let s = (0, 0);
+    let e = (graph.rows - 1, graph.columns - 1);
+    let mut priorityq = BTreeSet::new();
+    let mut seen = HashSet::new();
+    let mut score = usize::MAX;
+
+    priorityq.insert((0, s.0, s.1));
+    while let Some(item) = priorityq.pop_first() {
+        let (dist, r, c) = item;
+        if (r, c) == e {
+            score = dist;
+            break;
+        } else if seen.contains(&(r, c)) {
+            continue;
+        }
+        seen.insert((r, c));
+
+        for (i, j) in graph.neighbours((r, c), false).filter(|p| !seen.contains(p)) {
+            let cost = graph[(i, j)];
+            priorityq.insert((dist + cost, i, j));
+        }
+    }
+    score
+}
+
+fn solution(grid: &Matrix<usize>) -> usize {
+    let s = (0, 0);
+    let e = (grid.rows - 1, grid.columns - 1);
+
+    // dijkstra_partial() requires each neighbor be paired with a cost.
+    // the cost for our data is the grid value at that point
+    //
+    // cost mapping helper/iterator for neighbors (diagonals = false)
+    let neighbor_cost = |p: &Point| grid.neighbours(*p, false).map(|p| (p, grid[p]));
+
+    let result = dijkstra_partial(
+        // starting position
+        &s,
+        //
+        // retrieve (neighbor, cost) relative to 'p'
+        |p: &Point| neighbor_cost(p),
+        //
+        // stopping condition
+        |p: &Point| *p == e,
+    );
+
+    // result is a tuple: (HashMap<Point, (Point, Cost)>, Option<Point>)
+    //
+    // https://docs.rs/pathfinding/4.8.0/pathfinding/directed/dijkstra/fn.dijkstra_partial.html
+    // The result is a map where every node examined before the algorithm
+    // stopped (not including start) is associated with an optimal parent
+    // node and a cost from the start node, as well as the node which caused
+    // the algorithm to stop if any.
+    result.0[&e].1
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -141,19 +112,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // ==============================================================
 
-    let grid = get_grid(&puzzle_lines);
-    writeln!(
-        stdout,
-        "Answer Part 1 = {}",
-        solution(&grid, (0, 0), (grid.nrows() - 1, grid.ncols() - 1))
-    )?;
+    let grid = get_grid(&puzzle_lines)?;
+    writeln!(stdout, "Answer Part 1 = {}", solution(&grid))?;
 
-    let grid = get_grid_x5(&puzzle_lines);
-    writeln!(
-        stdout,
-        "Answer Part 2 = {}",
-        solution(&grid, (0, 0), (grid.nrows() - 1, grid.ncols() - 1))
-    )?;
+    let grid = get_grid_x5(&puzzle_lines)?;
+    writeln!(stdout, "Answer Part 2 = {}", solution(&grid))?;
 
     if args.get_flag("time") {
         writeln!(stdout, "Total Runtime: {:?}", timer.elapsed())?;
@@ -165,36 +128,44 @@ fn main() -> Result<(), Box<dyn Error>> {
 mod tests {
     use super::*;
 
-    fn get_data(filename: &str) -> Vec<String> {
+    fn get_data(filename: &str) -> Result<Vec<String>, Box<dyn Error>> {
         let file = std::path::PathBuf::from(filename);
-        read_trimmed_data_lines::<String>(Some(&file)).unwrap()
+        Ok(read_trimmed_data_lines::<String>(Some(&file))?)
     }
 
     #[test]
-    fn part1_example() {
-        let data = get_data("input-example");
-        let grid = get_grid(&data);
-        assert_eq!(solution(&grid, (0, 0), (grid.nrows() - 1, grid.ncols() - 1)), 40);
+    fn part1_example() -> Result<(), Box<dyn Error>> {
+        let data = get_data("input-example")?;
+        let grid = get_grid(&data)?;
+        assert_eq!(solution(&grid), 40);
+        assert_eq!(solution2(&grid), 40);
+        Ok(())
     }
 
     #[test]
-    fn part1_actual() {
-        let data = get_data("input-actual");
-        let grid = get_grid(&data);
-        assert_eq!(solution(&grid, (0, 0), (grid.nrows() - 1, grid.ncols() - 1)), 540);
+    fn part1_actual() -> Result<(), Box<dyn Error>> {
+        let data = get_data("input-actual")?;
+        let grid = get_grid(&data)?;
+        assert_eq!(solution(&grid), 540);
+        assert_eq!(solution2(&grid), 540);
+        Ok(())
     }
 
     #[test]
-    fn part2_example() {
-        let data = get_data("input-example");
-        let grid = get_grid_x5(&data);
-        assert_eq!(solution(&grid, (0, 0), (grid.nrows() - 1, grid.ncols() - 1)), 315);
+    fn part2_example() -> Result<(), Box<dyn Error>> {
+        let data = get_data("input-example")?;
+        let grid = get_grid_x5(&data)?;
+        assert_eq!(solution(&grid), 315);
+        assert_eq!(solution2(&grid), 315);
+        Ok(())
     }
 
     #[test]
-    fn part2_actual() {
-        let data = get_data("input-actual");
-        let grid = get_grid_x5(&data);
-        assert_eq!(solution(&grid, (0, 0), (grid.nrows() - 1, grid.ncols() - 1)), 2879);
+    fn part2_actual() -> Result<(), Box<dyn Error>> {
+        let data = get_data("input-actual")?;
+        let grid = get_grid_x5(&data)?;
+        assert_eq!(solution(&grid), 2879);
+        assert_eq!(solution2(&grid), 2879);
+        Ok(())
     }
 }

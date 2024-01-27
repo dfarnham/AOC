@@ -10,4 +10,4 @@ edition = "2021"
 
 [dependencies]
 general = { workspace = true }
-ndarray = { workspace = true }
+pathfinding = "4.8.0"

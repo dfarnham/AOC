@@ -78,25 +78,29 @@ fn part1(puzzle_lines: &[String], w: usize, h: usize) -> Result<usize, Box<dyn E
 }
 
 // matrix determinant using BigInt
-fn det(m: Vec<BigInt>) -> BigInt {
-    let mut result = BigInt::from(0);
-    let sz = (m.len() as f64).sqrt() as usize;
+fn det(mat: &[BigInt]) -> BigInt {
+    let mut sz = 2;
+    while sz * sz != mat.len() {
+        sz += 1;
+    }
+
     if sz == 2 {
-        return m[0].clone() * m[3].clone() - m[1].clone() * m[2].clone();
+        mat[0].clone() * mat[3].clone() - mat[1].clone() * mat[2].clone()
     } else {
+        let mut result = BigInt::from(0);
         let mut sign = 1;
         for n in 0..sz {
             let mut v = vec![];
             for i in 1..sz {
                 for j in (0..sz).filter(|j| *j != n) {
-                    v.push(m[i * sz + j].clone())
+                    v.push(mat[i * sz + j].clone())
                 }
             }
-            result += sign * m[n].clone() * det(v);
+            result += sign * mat[n].clone() * det(&v);
             sign = -sign;
         }
+        result
     }
-    result
 }
 
 #[rustfmt::skip]
@@ -165,7 +169,7 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let bz: Vec<BigInt> = bz.into_iter().map(BigInt::from).collect();
     
     // determinant of the coefficient matrix is the denominator in solutions
-    let answer = (det(bx.to_vec()) + det(by.to_vec()) + det(bz.to_vec())) / det(a.to_vec());
+    let answer = (det(&bx) + det(&by) + det(&bz)) / det(&a);
     Ok(answer.to_u64_digits().1[0] as usize)
 }
 

@@ -1,0 +1,12 @@
+[package]
+name = "day_22"
+version = "0.1.0"
+authors = ["Dave Farnham <dave.farnham@icloud.com>"]
+categories = ["command-line-utilities"]
+description = "Sand Slabs: https://adventofcode.com/2023/day/22"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+general = { workspace = true }

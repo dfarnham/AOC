@@ -11,4 +11,5 @@ edition = "2021"
 [dependencies]
 general = { workspace = true }
 itertools = { workspace = true }
+mathru = "0.15.3"
 num-bigint = "0.4.4"

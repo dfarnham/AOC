@@ -1,5 +1,12 @@
 use general::{get_args, read_trimmed_data_lines, reset_sigpipe, trim_split_on};
 use itertools::Itertools;
+use mathru::{
+    algebra::linear::{
+        matrix::{General, Transpose, Solve},
+        vector::Vector,
+    },
+    matrix, vector,
+};
 use num_bigint::BigInt;
 use std::error::Error;
 use std::io::{self, Write};
@@ -77,30 +84,69 @@ fn part1(puzzle_lines: &[String], w: usize, h: usize) -> Result<usize, Box<dyn E
         .count())
 }
 
-// matrix determinant using BigInt
-fn det(mat: &[BigInt]) -> BigInt {
-    let mut sz = 2;
-    while sz * sz != mat.len() {
-        sz += 1;
+#[rustfmt::skip]
+#[allow(dead_code)]
+fn part2_solve_mathru(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    let mut hailstones = vec![];
+    for s in &puzzle_lines[0..3] {
+        let parse = trim_split_on::<f64>(&s.replace('@', ","), ',')?;
+        hailstones.push((parse[0], parse[1], parse[2], parse[3], parse[4], parse[5]));
     }
 
-    if sz == 2 {
-        mat[0].clone() * mat[3].clone() - mat[1].clone() * mat[2].clone()
-    } else {
-        let mut result = BigInt::from(0);
-        let mut sign = 1;
-        for n in 0..sz {
-            let mut v = vec![];
-            for i in 1..sz {
-                for j in (0..sz).filter(|j| *j != n) {
-                    v.push(mat[i * sz + j].clone())
-                }
-            }
-            result += sign * mat[n].clone() * det(&v);
-            sign = -sign;
-        }
-        result
-    }
+    // points and velocities
+    let p1 = [hailstones[0].0, hailstones[0].1, hailstones[0].2];
+    let v1 = [hailstones[0].3, hailstones[0].4, hailstones[0].5];
+
+    let p2 = [hailstones[1].0, hailstones[1].1, hailstones[1].2];
+    let v2 = [hailstones[1].3, hailstones[1].4, hailstones[1].5];
+
+    let p3 = [hailstones[2].0, hailstones[2].1, hailstones[2].2];
+    let v3 = [hailstones[2].3, hailstones[2].4, hailstones[2].5];
+
+    // coefficient matrix (note the transpose() when building from a vec![])
+    let a: General<f64> = General::new(6, 6,
+        vec![
+            v2[1] - v1[1] , v1[0] - v2[0] , 0.            , p1[1] - p2[1] , p2[0] - p1[0] , 0.            ,
+            v3[1] - v1[1] , v1[0] - v3[0] , 0.            , p1[1] - p3[1] , p3[0] - p1[0] , 0.            ,
+            0.            , v2[2] - v1[2] , v1[1] - v2[1] , 0.            , p1[2] - p2[2] , p2[1] - p1[1] ,
+            0.            , v3[2] - v1[2] , v1[1] - v3[1] , 0.            , p1[2] - p3[2] , p3[1] - p1[1] ,
+            v2[2] - v1[2] , 0.            , v1[0] - v2[0] , p1[2] - p2[2] , 0.            , p2[0] - p1[0] ,
+            v3[2] - v1[2] , 0.            , v1[0] - v3[0] , p1[2] - p3[2] , 0.            , p3[0] - p1[0]
+        ]).transpose();
+
+    // solution vector
+    let b: Vector<f64> = Vector::new_column(
+        vec![
+            (p1[1] * v1[0] - p2[1] * v2[0]) - (p1[0] * v1[1] - p2[0] * v2[1]),
+            (p1[1] * v1[0] - p3[1] * v3[0]) - (p1[0] * v1[1] - p3[0] * v3[1]),
+            (p1[2] * v1[1] - p2[2] * v2[1]) - (p1[1] * v1[2] - p2[1] * v2[2]),
+            (p1[2] * v1[1] - p3[2] * v3[1]) - (p1[1] * v1[2] - p3[1] * v3[2]),
+            (p1[2] * v1[0] - p2[2] * v2[0]) - (p1[0] * v1[2] - p2[0] * v2[2]),
+            (p1[2] * v1[0] - p3[2] * v3[0]) - (p1[0] * v1[2] - p3[0] * v3[2])
+        ]);
+
+    // Solve it
+    let solution: Vector<f64> = a.solve(&b).expect("mathru solve() failed");
+
+    // no transpose() needed if using macros, matrix![], vector![]
+    let solution2 = matrix![
+            v2[1] - v1[1] , v1[0] - v2[0] , 0.            , p1[1] - p2[1] , p2[0] - p1[0] , 0.            ;
+            v3[1] - v1[1] , v1[0] - v3[0] , 0.            , p1[1] - p3[1] , p3[0] - p1[0] , 0.            ;
+            0.            , v2[2] - v1[2] , v1[1] - v2[1] , 0.            , p1[2] - p2[2] , p2[1] - p1[1] ;
+            0.            , v3[2] - v1[2] , v1[1] - v3[1] , 0.            , p1[2] - p3[2] , p3[1] - p1[1] ;
+            v2[2] - v1[2] , 0.            , v1[0] - v2[0] , p1[2] - p2[2] , 0.            , p2[0] - p1[0] ;
+            v3[2] - v1[2] , 0.            , v1[0] - v3[0] , p1[2] - p3[2] , 0.            , p3[0] - p1[0]
+        ].solve(&vector![
+            (p1[1] * v1[0] - p2[1] * v2[0]) - (p1[0] * v1[1] - p2[0] * v2[1]);
+            (p1[1] * v1[0] - p3[1] * v3[0]) - (p1[0] * v1[1] - p3[0] * v3[1]);
+            (p1[2] * v1[1] - p2[2] * v2[1]) - (p1[1] * v1[2] - p2[1] * v2[2]);
+            (p1[2] * v1[1] - p3[2] * v3[1]) - (p1[1] * v1[2] - p3[1] * v3[2]);
+            (p1[2] * v1[0] - p2[2] * v2[0]) - (p1[0] * v1[2] - p2[0] * v2[2]);
+            (p1[2] * v1[0] - p3[2] * v3[0]) - (p1[0] * v1[2] - p3[0] * v3[2])
+        ]).expect("mathru solve() failed");
+
+    assert_eq!(solution, solution2);
+    Ok((solution[0] + solution[1] + solution[2]).round() as usize)
 }
 
 #[rustfmt::skip]
@@ -147,10 +193,36 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
         (p1[2] * v1[0] - p2[2] * v2[0]) - (p1[0] * v1[2] - p2[0] * v2[2]),
         (p1[2] * v1[0] - p3[2] * v3[0]) - (p1[0] * v1[2] - p3[0] * v3[2]),
     ];
-
+    
     // =============
     // Cramer's Rule
     // =============
+
+    // matrix determinant using BigInt
+    fn det(mat: &[BigInt]) -> BigInt {
+        let mut sz = 2;
+        while sz * sz != mat.len() {
+            sz += 1;
+        }
+
+        if sz == 2 {
+            mat[0].clone() * mat[3].clone() - mat[1].clone() * mat[2].clone()
+        } else {
+            let mut result = BigInt::from(0);
+            let mut sign = 1;
+            for n in 0..sz {
+                let mut v = vec![];
+                for i in 1..sz {
+                    for j in (0..sz).filter(|j| *j != n) {
+                        v.push(mat[i * sz + j].clone())
+                    }
+                }
+                result += sign * mat[n].clone() * det(&v);
+                sign = -sign;
+            }
+            result
+        }
+    }
 
     // replace columns in "a" with solution vectors for x,y,z
     let mut bx = a;
@@ -237,9 +309,23 @@ mod tests {
     }
 
     #[test]
+    fn part2_solve_example() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example")?;
+        assert_eq!(part2_solve_mathru(&puzzle_lines)?, 47);
+        Ok(())
+    }
+
+    #[test]
     fn part2_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual")?;
         assert_eq!(part2(&puzzle_lines)?, 554668916217145);
+        Ok(())
+    }
+
+    #[test]
+    fn part2_solve_actual() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-actual")?;
+        assert_eq!(part2_solve_mathru(&puzzle_lines)?, 554668916217145);
         Ok(())
     }
 }

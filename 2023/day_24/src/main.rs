@@ -2,7 +2,7 @@ use general::{get_args, read_trimmed_data_lines, reset_sigpipe, trim_split_on};
 use itertools::Itertools;
 use mathru::{
     algebra::linear::{
-        matrix::{General, Transpose, Solve},
+        matrix::{General, Solve, Transpose},
         vector::Vector,
     },
     matrix, vector,
@@ -10,6 +10,11 @@ use mathru::{
 use num_bigint::BigInt;
 use std::error::Error;
 use std::io::{self, Write};
+
+use z3::{
+    ast::{Ast, Int},
+    Config, Context, SatResult, Solver,
+};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 struct Point {
@@ -84,45 +89,137 @@ fn part1(puzzle_lines: &[String], w: usize, h: usize) -> Result<usize, Box<dyn E
         .count())
 }
 
+#[allow(dead_code)]
+fn part2_z3_solver(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+    let mut hail = vec![];
+    for s in &puzzle_lines[0..3] {
+        let parse = trim_split_on::<i64>(&s.replace('@', ","), ',')?;
+        hail.push((parse[0], parse[1], parse[2], parse[3], parse[4], parse[5]));
+    }
+
+    // create a new solver
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    // points and velocities from the input
+    let (p1_x, p1_y, p1_z, v1_x, v1_y, v1_z) = (
+        Int::from_i64(&ctx, hail[0].0),
+        Int::from_i64(&ctx, hail[0].1),
+        Int::from_i64(&ctx, hail[0].2),
+        Int::from_i64(&ctx, hail[0].3),
+        Int::from_i64(&ctx, hail[0].4),
+        Int::from_i64(&ctx, hail[0].5),
+    );
+
+    let (p2_x, p2_y, p2_z, v2_x, v2_y, v2_z) = (
+        Int::from_i64(&ctx, hail[1].0),
+        Int::from_i64(&ctx, hail[1].1),
+        Int::from_i64(&ctx, hail[1].2),
+        Int::from_i64(&ctx, hail[1].3),
+        Int::from_i64(&ctx, hail[1].4),
+        Int::from_i64(&ctx, hail[1].5),
+    );
+
+    let (p3_x, p3_y, p3_z, v3_x, v3_y, v3_z) = (
+        Int::from_i64(&ctx, hail[2].0),
+        Int::from_i64(&ctx, hail[2].1),
+        Int::from_i64(&ctx, hail[2].2),
+        Int::from_i64(&ctx, hail[2].3),
+        Int::from_i64(&ctx, hail[2].4),
+        Int::from_i64(&ctx, hail[2].5),
+    );
+
+    // create labels to solve for
+    let x = Int::new_const(&ctx, "x");
+    let y = Int::new_const(&ctx, "y");
+    let z = Int::new_const(&ctx, "z");
+    let vx = Int::new_const(&ctx, "vx");
+    let vy = Int::new_const(&ctx, "vy");
+    let vz = Int::new_const(&ctx, "vz");
+    let t1 = Int::new_const(&ctx, "t1");
+    let t2 = Int::new_const(&ctx, "t2");
+    let t3 = Int::new_const(&ctx, "t3");
+
+    // Solver assertions -- 6 equations with 6 unknowns
+    /*
+    let zero = Int::from_i64(&ctx, 0);
+    solver.assert(&(&(&x - &p1_x) * &(&v1_y - &vy) - &(&y - &p1_y) * &(&v1_x - &vx))._eq(&zero));
+    solver.assert(&(&(&y - &p1_y) * &(&v1_z - &vz) - &(&z - &p1_z) * &(&v1_y - &vy))._eq(&zero));
+
+    solver.assert(&(&(&x - &p2_x) * &(&v2_y - &vy) - &(&y - &p2_y) * &(&v2_x - &vx))._eq(&zero));
+    solver.assert(&(&(&y - &p2_y) * &(&v2_z - &vz) - &(&z - &p2_z) * &(&v2_y - &vy))._eq(&zero));
+
+    solver.assert(&(&(&x - &p3_x) * &(&v3_y - &vy) - &(&y - &p3_y) * &(&v3_x - &vx))._eq(&zero));
+    solver.assert(&(&(&y - &p3_y) * &(&v3_z - &vz) - &(&z - &p3_z) * &(&v3_y - &vy))._eq(&zero));
+    */
+
+    // Solver assertions -- 9 unknowns (adding time)
+    solver.assert(&(&x + &t1 * &vx - &t1 * v1_x)._eq(&p1_x));
+    solver.assert(&(&y + &t1 * &vy - &t1 * v1_y)._eq(&p1_y));
+    solver.assert(&(&z + &t1 * &vz - &t1 * v1_z)._eq(&p1_z));
+
+    solver.assert(&(&x + &t2 * &vx - &t2 * v2_x)._eq(&p2_x));
+    solver.assert(&(&y + &t2 * &vy - &t2 * v2_y)._eq(&p2_y));
+    solver.assert(&(&z + &t2 * &vz - &t2 * v2_z)._eq(&p2_z));
+
+    solver.assert(&(&x + &t3 * &vx - &t3 * v3_x)._eq(&p3_x));
+    solver.assert(&(&y + &t3 * &vy - &t3 * v3_y)._eq(&p3_y));
+    solver.assert(&(&z + &t3 * &vz - &t3 * v3_z)._eq(&p3_z));
+
+    match solver.check() {
+        SatResult::Sat => {
+            let model = solver.get_model().expect("solver.get_model");
+            println!("model = {model:?}");
+            let answer = model.eval(&(x + y + z), true).expect("model.eval");
+            Ok(answer.as_u64().unwrap() as usize)
+        }
+        _ => panic!("assertions are not satisfiable"),
+    }
+}
+
 #[rustfmt::skip]
 #[allow(dead_code)]
 fn part2_solve_mathru(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let mut hailstones = vec![];
+    let mut hail = vec![];
     for s in &puzzle_lines[0..3] {
         let parse = trim_split_on::<f64>(&s.replace('@', ","), ',')?;
-        hailstones.push((parse[0], parse[1], parse[2], parse[3], parse[4], parse[5]));
+        hail.push((parse[0], parse[1], parse[2], parse[3], parse[4], parse[5]));
     }
 
-    // points and velocities
-    let p1 = [hailstones[0].0, hailstones[0].1, hailstones[0].2];
-    let v1 = [hailstones[0].3, hailstones[0].4, hailstones[0].5];
+    // points and velocities from the input
+    let (p1_x, p1_y, p1_z, v1_x, v1_y, v1_z) = (
+        hail[0].0, hail[0].1, hail[0].2, hail[0].3, hail[0].4, hail[0].5,
+    );
 
-    let p2 = [hailstones[1].0, hailstones[1].1, hailstones[1].2];
-    let v2 = [hailstones[1].3, hailstones[1].4, hailstones[1].5];
+    let (p2_x, p2_y, p2_z, v2_x, v2_y, v2_z) = (
+        hail[1].0, hail[1].1, hail[1].2, hail[1].3, hail[1].4, hail[1].5,
+    );
 
-    let p3 = [hailstones[2].0, hailstones[2].1, hailstones[2].2];
-    let v3 = [hailstones[2].3, hailstones[2].4, hailstones[2].5];
+    let (p3_x, p3_y, p3_z, v3_x, v3_y, v3_z) = (
+        hail[2].0, hail[2].1, hail[2].2, hail[2].3, hail[2].4, hail[2].5,
+    );
 
     // coefficient matrix (note the transpose() when building from a vec![])
     let a: General<f64> = General::new(6, 6,
         vec![
-            v2[1] - v1[1] , v1[0] - v2[0] , 0.            , p1[1] - p2[1] , p2[0] - p1[0] , 0.            ,
-            v3[1] - v1[1] , v1[0] - v3[0] , 0.            , p1[1] - p3[1] , p3[0] - p1[0] , 0.            ,
-            0.            , v2[2] - v1[2] , v1[1] - v2[1] , 0.            , p1[2] - p2[2] , p2[1] - p1[1] ,
-            0.            , v3[2] - v1[2] , v1[1] - v3[1] , 0.            , p1[2] - p3[2] , p3[1] - p1[1] ,
-            v2[2] - v1[2] , 0.            , v1[0] - v2[0] , p1[2] - p2[2] , 0.            , p2[0] - p1[0] ,
-            v3[2] - v1[2] , 0.            , v1[0] - v3[0] , p1[2] - p3[2] , 0.            , p3[0] - p1[0]
+            v2_y - v1_y , v1_x - v2_x , 0.            , p1_y - p2_y , p2_x - p1_x , 0.          ,
+            v3_y - v1_y , v1_x - v3_x , 0.            , p1_y - p3_y , p3_x - p1_x , 0.          ,
+            0.          , v2_z - v1_z , v1_y - v2_y , 0.            , p1_z - p2_z , p2_y - p1_y ,
+            0.          , v3_z - v1_z , v1_y - v3_y , 0.            , p1_z - p3_z , p3_y - p1_y ,
+            v2_z - v1_z , 0.          , v1_x - v2_x , p1_z - p2_z , 0.            , p2_x - p1_x ,
+            v3_z - v1_z , 0.          , v1_x - v3_x , p1_z - p3_z , 0.            , p3_x - p1_x
         ]).transpose();
 
     // solution vector
     let b: Vector<f64> = Vector::new_column(
         vec![
-            (p1[1] * v1[0] - p2[1] * v2[0]) - (p1[0] * v1[1] - p2[0] * v2[1]),
-            (p1[1] * v1[0] - p3[1] * v3[0]) - (p1[0] * v1[1] - p3[0] * v3[1]),
-            (p1[2] * v1[1] - p2[2] * v2[1]) - (p1[1] * v1[2] - p2[1] * v2[2]),
-            (p1[2] * v1[1] - p3[2] * v3[1]) - (p1[1] * v1[2] - p3[1] * v3[2]),
-            (p1[2] * v1[0] - p2[2] * v2[0]) - (p1[0] * v1[2] - p2[0] * v2[2]),
-            (p1[2] * v1[0] - p3[2] * v3[0]) - (p1[0] * v1[2] - p3[0] * v3[2])
+            (p1_y * v1_x - p2_y * v2_x) - (p1_x * v1_y - p2_x * v2_y),
+            (p1_y * v1_x - p3_y * v3_x) - (p1_x * v1_y - p3_x * v3_y),
+            (p1_z * v1_y - p2_z * v2_y) - (p1_y * v1_z - p2_y * v2_z),
+            (p1_z * v1_y - p3_z * v3_y) - (p1_y * v1_z - p3_y * v3_z),
+            (p1_z * v1_x - p2_z * v2_x) - (p1_x * v1_z - p2_x * v2_z),
+            (p1_z * v1_x - p3_z * v3_x) - (p1_x * v1_z - p3_x * v3_z)
         ]);
 
     // Solve it
@@ -130,19 +227,19 @@ fn part2_solve_mathru(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> 
 
     // no transpose() needed if using macros, matrix![], vector![]
     let solution2 = matrix![
-            v2[1] - v1[1] , v1[0] - v2[0] , 0.            , p1[1] - p2[1] , p2[0] - p1[0] , 0.            ;
-            v3[1] - v1[1] , v1[0] - v3[0] , 0.            , p1[1] - p3[1] , p3[0] - p1[0] , 0.            ;
-            0.            , v2[2] - v1[2] , v1[1] - v2[1] , 0.            , p1[2] - p2[2] , p2[1] - p1[1] ;
-            0.            , v3[2] - v1[2] , v1[1] - v3[1] , 0.            , p1[2] - p3[2] , p3[1] - p1[1] ;
-            v2[2] - v1[2] , 0.            , v1[0] - v2[0] , p1[2] - p2[2] , 0.            , p2[0] - p1[0] ;
-            v3[2] - v1[2] , 0.            , v1[0] - v3[0] , p1[2] - p3[2] , 0.            , p3[0] - p1[0]
+            v2_y - v1_y , v1_x - v2_x , 0.          , p1_y - p2_y , p2_x - p1_x , 0.          ;
+            v3_y - v1_y , v1_x - v3_x , 0.          , p1_y - p3_y , p3_x - p1_x , 0.          ;
+            0.          , v2_z - v1_z , v1_y - v2_y , 0.          , p1_z - p2_z , p2_y - p1_y ;
+            0.          , v3_z - v1_z , v1_y - v3_y , 0.          , p1_z - p3_z , p3_y - p1_y ;
+            v2_z - v1_z , 0.          , v1_x - v2_x , p1_z - p2_z , 0.          , p2_x - p1_x ;
+            v3_z - v1_z , 0.          , v1_x - v3_x , p1_z - p3_z , 0.          , p3_x - p1_x
         ].solve(&vector![
-            (p1[1] * v1[0] - p2[1] * v2[0]) - (p1[0] * v1[1] - p2[0] * v2[1]);
-            (p1[1] * v1[0] - p3[1] * v3[0]) - (p1[0] * v1[1] - p3[0] * v3[1]);
-            (p1[2] * v1[1] - p2[2] * v2[1]) - (p1[1] * v1[2] - p2[1] * v2[2]);
-            (p1[2] * v1[1] - p3[2] * v3[1]) - (p1[1] * v1[2] - p3[1] * v3[2]);
-            (p1[2] * v1[0] - p2[2] * v2[0]) - (p1[0] * v1[2] - p2[0] * v2[2]);
-            (p1[2] * v1[0] - p3[2] * v3[0]) - (p1[0] * v1[2] - p3[0] * v3[2])
+            (p1_y * v1_x - p2_y * v2_x) - (p1_x * v1_y - p2_x * v2_y);
+            (p1_y * v1_x - p3_y * v3_x) - (p1_x * v1_y - p3_x * v3_y);
+            (p1_z * v1_y - p2_z * v2_y) - (p1_y * v1_z - p2_y * v2_z);
+            (p1_z * v1_y - p3_z * v3_y) - (p1_y * v1_z - p3_y * v3_z);
+            (p1_z * v1_x - p2_z * v2_x) - (p1_x * v1_z - p2_x * v2_z);
+            (p1_z * v1_x - p3_z * v3_x) - (p1_x * v1_z - p3_x * v3_z)
         ]).expect("mathru solve() failed");
 
     assert_eq!(solution, solution2);
@@ -151,47 +248,51 @@ fn part2_solve_mathru(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> 
 
 #[rustfmt::skip]
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
-    let mut hailstones = vec![];
+    let mut hail = vec![];
 
     // any 3 points provide an integer solution (current algorithm)
     //
     // I originally looped over all stones taking 3 at a time, hashing
     // solver results and using the first duplicate answer to get
     // around floating point differences and that works fine too
-    // for those class of solvers but this feels a little cleaner
+    // for those class of solvers but this feels a little cleaner.
+    // The z3 solver solution with time is nice.
     for s in &puzzle_lines[0..3] {
         let parse = trim_split_on::<i64>(&s.replace('@', ","), ',')?;
-        hailstones.push((parse[0], parse[1], parse[2], parse[3], parse[4], parse[5]));
+        hail.push((parse[0], parse[1], parse[2], parse[3], parse[4], parse[5]));
     }
 
-    // points and velocities
-    let p1 = [hailstones[0].0, hailstones[0].1, hailstones[0].2];
-    let v1 = [hailstones[0].3, hailstones[0].4, hailstones[0].5];
+    // points and velocities from the input
+    let (p1_x, p1_y, p1_z, v1_x, v1_y, v1_z) = (
+        hail[0].0, hail[0].1, hail[0].2, hail[0].3, hail[0].4, hail[0].5,
+    );
 
-    let p2 = [hailstones[1].0, hailstones[1].1, hailstones[1].2];
-    let v2 = [hailstones[1].3, hailstones[1].4, hailstones[1].5];
+    let (p2_x, p2_y, p2_z, v2_x, v2_y, v2_z) = (
+        hail[1].0, hail[1].1, hail[1].2, hail[1].3, hail[1].4, hail[1].5,
+    );
 
-    let p3 = [hailstones[2].0, hailstones[2].1, hailstones[2].2];
-    let v3 = [hailstones[2].3, hailstones[2].4, hailstones[2].5];
+    let (p3_x, p3_y, p3_z, v3_x, v3_y, v3_z) = (
+        hail[2].0, hail[2].1, hail[2].2, hail[2].3, hail[2].4, hail[2].5,
+    );
 
     // coefficient matrix
     let a = [
-        v2[1] - v1[1] , v1[0] - v2[0] , 0             , p1[1] - p2[1] , p2[0] - p1[0] , 0             ,
-        v3[1] - v1[1] , v1[0] - v3[0] , 0             , p1[1] - p3[1] , p3[0] - p1[0] , 0             ,
-        0             , v2[2] - v1[2] , v1[1] - v2[1] , 0             , p1[2] - p2[2] , p2[1] - p1[1] ,
-        0             , v3[2] - v1[2] , v1[1] - v3[1] , 0             , p1[2] - p3[2] , p3[1] - p1[1] ,
-        v2[2] - v1[2] , 0             , v1[0] - v2[0] , p1[2] - p2[2] , 0             , p2[0] - p1[0] ,
-        v3[2] - v1[2] , 0             , v1[0] - v3[0] , p1[2] - p3[2] , 0             , p3[0] - p1[0] ,
+        v2_y - v1_y , v1_x - v2_x , 0             , p1_y - p2_y , p2_x - p1_x , 0           ,
+        v3_y - v1_y , v1_x - v3_x , 0             , p1_y - p3_y , p3_x - p1_x , 0           ,
+        0           , v2_z - v1_z , v1_y - v2_y , 0             , p1_z - p2_z , p2_y - p1_y ,
+        0           , v3_z - v1_z , v1_y - v3_y , 0             , p1_z - p3_z , p3_y - p1_y ,
+        v2_z - v1_z , 0           , v1_x - v2_x , p1_z - p2_z , 0             , p2_x - p1_x ,
+        v3_z - v1_z , 0           , v1_x - v3_x , p1_z - p3_z , 0             , p3_x - p1_x
     ];
 
     // solution vector
     let b = [
-        (p1[1] * v1[0] - p2[1] * v2[0]) - (p1[0] * v1[1] - p2[0] * v2[1]),
-        (p1[1] * v1[0] - p3[1] * v3[0]) - (p1[0] * v1[1] - p3[0] * v3[1]),
-        (p1[2] * v1[1] - p2[2] * v2[1]) - (p1[1] * v1[2] - p2[1] * v2[2]),
-        (p1[2] * v1[1] - p3[2] * v3[1]) - (p1[1] * v1[2] - p3[1] * v3[2]),
-        (p1[2] * v1[0] - p2[2] * v2[0]) - (p1[0] * v1[2] - p2[0] * v2[2]),
-        (p1[2] * v1[0] - p3[2] * v3[0]) - (p1[0] * v1[2] - p3[0] * v3[2]),
+        (p1_y * v1_x - p2_y * v2_x) - (p1_x * v1_y - p2_x * v2_y),
+        (p1_y * v1_x - p3_y * v3_x) - (p1_x * v1_y - p3_x * v3_y),
+        (p1_z * v1_y - p2_z * v2_y) - (p1_y * v1_z - p2_y * v2_z),
+        (p1_z * v1_y - p3_z * v3_y) - (p1_y * v1_z - p3_y * v3_z),
+        (p1_z * v1_x - p2_z * v2_x) - (p1_x * v1_z - p2_x * v2_z),
+        (p1_z * v1_x - p3_z * v3_x) - (p1_x * v1_z - p3_x * v3_z),
     ];
     
     // =============
@@ -271,6 +372,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         )?;
     }
     writeln!(stdout, "Answer Part 2 = {:?}", part2(&puzzle_lines)?)?;
+    //writeln!(stdout, "Answer Part 2 = {:?}", part2_solve_mathru(&puzzle_lines)?)?;
+    writeln!(stdout, "Answer Part 2 = {:?}", part2_z3_solver(&puzzle_lines)?)?;
 
     if args.get_flag("time") {
         writeln!(stdout, "Total Runtime: {:?}", timer.elapsed())?;
@@ -309,9 +412,16 @@ mod tests {
     }
 
     #[test]
-    fn part2_solve_example() -> Result<(), Box<dyn Error>> {
+    fn part2_solve_mathru_example() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example")?;
         assert_eq!(part2_solve_mathru(&puzzle_lines)?, 47);
+        Ok(())
+    }
+
+    #[test]
+    fn part2_z3_solver_example() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-example")?;
+        assert_eq!(part2_z3_solver(&puzzle_lines)?, 47);
         Ok(())
     }
 
@@ -323,9 +433,16 @@ mod tests {
     }
 
     #[test]
-    fn part2_solve_actual() -> Result<(), Box<dyn Error>> {
+    fn part2_solve_mathru_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual")?;
         assert_eq!(part2_solve_mathru(&puzzle_lines)?, 554668916217145);
+        Ok(())
+    }
+
+    #[test]
+    fn part2_z3_solver_actual() -> Result<(), Box<dyn Error>> {
+        let puzzle_lines = get_data("input-actual")?;
+        assert_eq!(part2_z3_solver(&puzzle_lines)?, 554668916217145);
         Ok(())
     }
 }

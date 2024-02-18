@@ -13,3 +13,4 @@ general = { workspace = true }
 itertools = { workspace = true }
 mathru = "0.15.3"
 num-bigint = "0.4.4"
+z3 = {version="0.12", features = ["static-link-z3"]}

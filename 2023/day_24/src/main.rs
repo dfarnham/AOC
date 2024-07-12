@@ -11,10 +11,12 @@ use num_bigint::BigInt;
 use std::error::Error;
 use std::io::{self, Write};
 
+/*
 use z3::{
     ast::{Ast, Int},
     Config, Context, SatResult, Solver,
 };
+*/
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 struct Point {
@@ -89,6 +91,7 @@ fn part1(puzzle_lines: &[String], w: usize, h: usize) -> Result<usize, Box<dyn E
         .count())
 }
 
+/*
 #[allow(dead_code)]
 fn part2_z3_solver(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let mut hail = vec![];
@@ -142,17 +145,15 @@ fn part2_z3_solver(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let t3 = Int::new_const(&ctx, "t3");
 
     // Solver assertions -- 6 equations with 6 unknowns
-    /*
-    let zero = Int::from_i64(&ctx, 0);
-    solver.assert(&(&(&x - &p1_x) * &(&v1_y - &vy) - &(&y - &p1_y) * &(&v1_x - &vx))._eq(&zero));
-    solver.assert(&(&(&y - &p1_y) * &(&v1_z - &vz) - &(&z - &p1_z) * &(&v1_y - &vy))._eq(&zero));
+    //let zero = Int::from_i64(&ctx, 0);
+    //solver.assert(&(&(&x - &p1_x) * &(&v1_y - &vy) - &(&y - &p1_y) * &(&v1_x - &vx))._eq(&zero));
+    //solver.assert(&(&(&y - &p1_y) * &(&v1_z - &vz) - &(&z - &p1_z) * &(&v1_y - &vy))._eq(&zero));
 
-    solver.assert(&(&(&x - &p2_x) * &(&v2_y - &vy) - &(&y - &p2_y) * &(&v2_x - &vx))._eq(&zero));
-    solver.assert(&(&(&y - &p2_y) * &(&v2_z - &vz) - &(&z - &p2_z) * &(&v2_y - &vy))._eq(&zero));
+    //solver.assert(&(&(&x - &p2_x) * &(&v2_y - &vy) - &(&y - &p2_y) * &(&v2_x - &vx))._eq(&zero));
+    //solver.assert(&(&(&y - &p2_y) * &(&v2_z - &vz) - &(&z - &p2_z) * &(&v2_y - &vy))._eq(&zero));
 
-    solver.assert(&(&(&x - &p3_x) * &(&v3_y - &vy) - &(&y - &p3_y) * &(&v3_x - &vx))._eq(&zero));
-    solver.assert(&(&(&y - &p3_y) * &(&v3_z - &vz) - &(&z - &p3_z) * &(&v3_y - &vy))._eq(&zero));
-    */
+    //solver.assert(&(&(&x - &p3_x) * &(&v3_y - &vy) - &(&y - &p3_y) * &(&v3_x - &vx))._eq(&zero));
+    //solver.assert(&(&(&y - &p3_y) * &(&v3_z - &vz) - &(&z - &p3_z) * &(&v3_y - &vy))._eq(&zero));
 
     // Solver assertions -- 9 unknowns (adding time)
     solver.assert(&(&x + &t1 * &vx - &t1 * v1_x)._eq(&p1_x));
@@ -177,6 +178,7 @@ fn part2_z3_solver(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
         _ => panic!("assertions are not satisfiable"),
     }
 }
+*/
 
 #[rustfmt::skip]
 #[allow(dead_code)]
@@ -372,8 +374,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         )?;
     }
     writeln!(stdout, "Answer Part 2 = {:?}", part2(&puzzle_lines)?)?;
-    //writeln!(stdout, "Answer Part 2 = {:?}", part2_solve_mathru(&puzzle_lines)?)?;
-    writeln!(stdout, "Answer Part 2 = {:?}", part2_z3_solver(&puzzle_lines)?)?;
+    writeln!(stdout, "Answer Part 2 = {:?}", part2_solve_mathru(&puzzle_lines)?)?;
+    //writeln!(stdout, "Answer Part 2 = {:?}", part2_z3_solver(&puzzle_lines)?)?;
 
     if args.get_flag("time") {
         writeln!(stdout, "Total Runtime: {:?}", timer.elapsed())?;
@@ -418,12 +420,14 @@ mod tests {
         Ok(())
     }
 
+    /*
     #[test]
     fn part2_z3_solver_example() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example")?;
         assert_eq!(part2_z3_solver(&puzzle_lines)?, 47);
         Ok(())
     }
+    */
 
     #[test]
     fn part2_actual() -> Result<(), Box<dyn Error>> {
@@ -439,10 +443,12 @@ mod tests {
         Ok(())
     }
 
+    /*
     #[test]
     fn part2_z3_solver_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual")?;
         assert_eq!(part2_z3_solver(&puzzle_lines)?, 554668916217145);
         Ok(())
     }
+    */
 }

@@ -32,9 +32,9 @@ members = [
 
 [workspace.dependencies]
 general = { path = "../general" }
-itertools = "0.12"
+itertools = "0.13"
 json = "0.12"
-lazy_static = "1.4"
+lazy_static = "1.5"
 ndarray = "0.15"
 regex = "1.10"
 num = "0.4"

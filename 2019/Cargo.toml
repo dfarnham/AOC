@@ -17,7 +17,7 @@ members = [
     "day_12",
     "day_13",
     "day_14",
-#   "day_15",
+    "day_15",
 #   "day_16",
 #   "day_17",
 #   "day_18",
@@ -32,8 +32,8 @@ members = [
 
 [workspace.dependencies]
 general = { path = "../general" }
-itertools = "0.11"
+itertools = "0.13"
 ndarray = "0.15"
 num-integer = "0.1"
-rayon = "1.8"
+rayon = "1.10"
 regex = "1.10"

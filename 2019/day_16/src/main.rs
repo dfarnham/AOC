@@ -111,7 +111,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     // ==============================================================
 
     writeln!(stdout, "Answer Part 1 = {:?}", part1(&puzzle_lines)?)?;
-    writeln!(stdout, "Answer Part 2 = {:?}", part2(&puzzle_lines, 10000)?)?;
+    if puzzle_lines[0].len() == 650 {
+        writeln!(stdout, "Answer Part 2 = {:?}", part2(&puzzle_lines, 10000)?)?;
+    }
 
     if args.get_flag("time") {
         writeln!(stdout, "Total Runtime: {:?}", timer.elapsed())?;

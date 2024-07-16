@@ -9,7 +9,7 @@ fn get_data(puzzle_lines: &[String]) -> Result<Vec<i64>, Box<dyn Error>> {
 }
 
 #[rustfmt::skip]
-fn run_program(program: &[i64], input: &[i64], grid: &mut Vec<char>) -> Result<usize, Box<dyn Error>> {
+fn run_program(program: &[i64], input: &[u32], grid: &mut Vec<char>) -> Result<usize, Box<dyn Error>> {
     let mut opcodes = BTreeMap::<i64, i64>::new();
     for (inst_ptr, code) in program.iter().enumerate() {
         opcodes.insert(inst_ptr as i64, *code);
@@ -144,7 +144,7 @@ fn run_program(program: &[i64], input: &[i64], grid: &mut Vec<char>) -> Result<u
                         _ => panic!("opcode = {opcode}, modes = {modes:?}"),
                     };
                     print!("{}", char::from_u32(input[input_index] as u32).unwrap());
-                    opcodes.insert(index, input[input_index]);
+                    opcodes.insert(index, input[input_index] as i64);
                     input_index += 1;
                 } else if input.is_empty() {
                     grid.push(char::from_u32(a as u32).unwrap());
@@ -215,15 +215,13 @@ fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     program[0] = 2;
 
     // L8 R10 L8 R8 L12 R8 R8 L8 R10 L8 R8 L8 R6 R6 R10 L8 L8 R6 R6 R10 L8 L8 R10 L8 R8 L12 R8 R8 L8 R6 R6 R10 L8 L12 R8 R8 L12 R8 R8
-    // A,B,A,C,C,A,B,C,B,B
+    // [     A    ] [   B   ] [     A    ] [     C       ] [     C       ] [     A    ] [   B   ] [     C       ] [   B   ] [   B   ]
+    //
     // A = L8 R10 L8 R8
     // B = L12 R8 R8
     // C = L8 R6 R6 R10 L8
-    let input = [
-        65, 44, 66, 44, 65, 44, 67, 44, 67, 44, 65, 44, 66, 44, 67, 44, 66, 44, 66, 10, 76, 44, 56, 44, 82, 44, 49, 48,
-        44, 76, 44, 56, 44, 82, 44, 56, 10, 76, 44, 49, 50, 44, 82, 44, 56, 44, 82, 44, 56, 10, 76, 44, 56, 44, 82, 44,
-        54, 44, 82, 44, 54, 44, 82, 44, 49, 48, 44, 76, 44, 56, 10, 78, 10,
-    ];
+    let input = "A,B,A,C,C,A,B,C,B,B\nL,8,R,10,L,8,R,8\nL,12,R,8,R,8\nL,8,R,6,R,6,R,10,L,8\nN\n";
+    let input: Vec<u32> = input.chars().map(|c| c as u32).collect();
     let result = run_program(&program, &input, &mut grid_data)?;
     Ok(result as usize)
 }

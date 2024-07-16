@@ -143,7 +143,7 @@ fn run_program(program: &[i64], input: &[u32], grid: &mut Vec<char>) -> Result<u
                         2 => param_1 + relative_base,
                         _ => panic!("opcode = {opcode}, modes = {modes:?}"),
                     };
-                    print!("{}", char::from_u32(input[input_index] as u32).unwrap());
+                    print!("{}", char::from_u32(input[input_index]).unwrap());
                     opcodes.insert(index, input[input_index] as i64);
                     input_index += 1;
                 } else if input.is_empty() {

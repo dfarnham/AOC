@@ -38,7 +38,7 @@ fn solve(
     let expressions = monkey_expressions;
 
     // loop until name evaluates, could be forever
-    while values.get(name).is_none() {
+    while !values.contains_key(name) {
         for (k, v) in expressions {
             if !values.contains_key(k) {
                 if let (Some(a), Some(b)) = (values.get(&v[0]), values.get(&v[2])) {

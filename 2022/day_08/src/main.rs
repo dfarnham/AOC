@@ -7,11 +7,7 @@ use std::io::{self, Write};
 fn get_grid(data: &[String]) -> Array2<u32> {
     // row parsing rules for lines in data
     const RADIX: u32 = 10;
-    let get_row = |s: &str| {
-        s.chars()
-            .map(|c| c.to_digit(RADIX).unwrap())
-            .collect::<Vec<_>>()
-    };
+    let get_row = |s: &str| s.chars().map(|c| c.to_digit(RADIX).unwrap()).collect::<Vec<_>>();
 
     // use data[0] to size the new Array2
     let mut grid = Array::from_elem((0, data[0].len()), 0);
@@ -50,7 +46,7 @@ fn scenic_score(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let dim = mat.nrows() - 1;
     let mut scores = vec![];
 
-    fn count_view(n: u32, vals: &Vec<u32>) -> usize {
+    fn count_view(n: u32, vals: &[u32]) -> usize {
         match vals.iter().position(|v| *v >= n) {
             Some(c) => c + 1,
             None => vals.len(),
@@ -61,9 +57,9 @@ fn scenic_score(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
         for j in 1..dim {
             let n = mat[[i, j]];
             let score = 
-                count_view(n, &mat.slice(s![i, ..j]).to_vec().iter().rev().copied().collect()) *
+                count_view(n, &mat.slice(s![i, ..j]).to_vec().iter().rev().copied().collect::<Vec<_>>()) *
                 count_view(n, &mat.slice(s![i, j + 1..]).to_vec()) *
-                count_view(n, &mat.slice(s![..i, j]).to_vec().iter().rev().copied().collect()) *
+                count_view(n, &mat.slice(s![..i, j]).to_vec().iter().rev().copied().collect::<Vec<_>>()) *
                 count_view(n, &mat.slice(s![i + 1.., j]).to_vec());
             scores.push(score);
         }

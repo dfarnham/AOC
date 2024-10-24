@@ -27,7 +27,7 @@ fn get_rocks(x_offset: usize) -> Vec<Vec<(usize, usize)>> {
     let rock5 = vec![ (0,1), (1,1),
                       (0,0), (1,0) ];
 
-    let rocks = vec![ rock1, rock2, rock3, rock4, rock5 ];
+    let rocks = [ rock1, rock2, rock3, rock4, rock5 ];
     rocks.iter()
         .map(|r| r.iter().map(|(x, y)| (*x + x_offset, *y)).collect::<Vec<_>>())
         .collect::<Vec<_>>()
@@ -35,10 +35,7 @@ fn get_rocks(x_offset: usize) -> Vec<Vec<(usize, usize)>> {
 
 fn move_left(chamber: &HashSet<(usize, usize)>, rock: &[(usize, usize)]) -> Vec<(usize, usize)> {
     if rock.iter().map(|(x, _)| *x).min() != Some(0) {
-        let moved = rock
-            .iter()
-            .map(|(x, y)| (*x - 1, *y))
-            .collect::<Vec<(_, _)>>();
+        let moved = rock.iter().map(|(x, y)| (*x - 1, *y)).collect::<Vec<(_, _)>>();
         if legal_move(chamber, &moved) {
             return moved;
         }
@@ -48,10 +45,7 @@ fn move_left(chamber: &HashSet<(usize, usize)>, rock: &[(usize, usize)]) -> Vec<
 
 fn move_right(chamber: &HashSet<(usize, usize)>, rock: &[(usize, usize)]) -> Vec<(usize, usize)> {
     if rock.iter().map(|(x, _)| *x).max() != Some(6) {
-        let moved = rock
-            .iter()
-            .map(|(x, y)| (*x + 1, *y))
-            .collect::<Vec<(_, _)>>();
+        let moved = rock.iter().map(|(x, y)| (*x + 1, *y)).collect::<Vec<(_, _)>>();
         if legal_move(chamber, &moved) {
             return moved;
         }
@@ -72,9 +66,7 @@ fn move_up(rock: &mut [(usize, usize)]) {
 }
 
 fn adjust_height(rock: &[(usize, usize)], height: usize) -> Vec<(usize, usize)> {
-    rock.iter()
-        .map(|(x, y)| (*x, *y + height))
-        .collect::<Vec<_>>()
+    rock.iter().map(|(x, y)| (*x, *y + height)).collect::<Vec<_>>()
 }
 
 fn legal_move(chamber: &HashSet<(usize, usize)>, rock: &[(usize, usize)]) -> bool {
@@ -163,11 +155,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // ==============================================================
 
     writeln!(stdout, "Answer Part 1 = {}", solve(&puzzle_lines, 2022)?)?;
-    writeln!(
-        stdout,
-        "Answer Part 2 = {}",
-        solve(&puzzle_lines, 1000000000000)?
-    )?;
+    writeln!(stdout, "Answer Part 2 = {}", solve(&puzzle_lines, 1000000000000)?)?;
 
     if args.get_flag("time") {
         writeln!(stdout, "Total Runtime: {:?}", timer.elapsed())?;

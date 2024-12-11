@@ -21,6 +21,13 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
+pub fn split_by_delimiter(input: &str, delimiter: &str) -> Vec<String> {
+    input
+        .split(delimiter) // Split the input string by the delimiter
+        .map(|s| s.into()) // Convert each substring to a String
+        .collect() // Collect the results into a Vec<String>
+}
+
 // splits and trims the input String on a separator character
 // returns a Vec of parse::<T>() over the splits
 pub fn trim_split_on<T>(text: &str, sep: char) -> Result<Vec<T>, Box<dyn std::error::Error>>

@@ -4,11 +4,7 @@ use std::io::{self, Write};
 
 fn level_test(levels: &[i64]) -> bool {
     // The difference between adjacent values must be between 1 and 3
-    let adjacent_test = |levels: &[i64]| -> bool {
-        levels
-            .windows(2)
-            .all(|w| (1..=3).contains(&w[0].abs_diff(w[1])))
-    };
+    let adjacent_test = |levels: &[i64]| -> bool { levels.windows(2).all(|w| (1..=3).contains(&w[0].abs_diff(w[1]))) };
 
     // Levels must be sorted (ascending or descending)
     let sorted_test = |levels: &[i64]| -> bool {

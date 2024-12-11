@@ -5,9 +5,7 @@ use std::io::{self, Write};
 
 fn get_grid(data: &[String]) -> Result<Matrix<char>, Box<dyn Error>> {
     Ok(Matrix::from_rows(
-        data.iter()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.chars()),
+        data.iter().filter(|line| !line.is_empty()).map(|line| line.chars()),
     )?)
 }
 

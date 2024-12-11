@@ -9,14 +9,8 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 
     // find all "mul(number,number)" instructions and sum the products
     Ok(re.captures_iter(&input).fold(0, |acc, cap| {
-        acc + cap
-            .get(1)
-            .map(|s| s.as_str().parse::<usize>().unwrap())
-            .unwrap()
-            * cap
-                .get(2)
-                .map(|s| s.as_str().parse::<usize>().unwrap())
-                .unwrap()
+        acc + cap.get(1).map(|s| s.as_str().parse::<usize>().unwrap()).unwrap()
+            * cap.get(2).map(|s| s.as_str().parse::<usize>().unwrap()).unwrap()
     }))
 }
 

@@ -9,18 +9,13 @@ type Point = (usize, usize);
 
 fn get_grid(data: &[String]) -> Result<Matrix<char>, Box<dyn Error>> {
     Ok(Matrix::from_rows(
-        data.iter()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.chars()),
+        data.iter().filter(|line| !line.is_empty()).map(|line| line.chars()),
     )?)
 }
 
 fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> {
     let grid = get_grid(puzzle_lines)?;
-    let antennas: Vec<_> = grid
-        .items()
-        .filter(|((_, _), c)| c.is_ascii_alphanumeric())
-        .collect();
+    let antennas: Vec<_> = grid.items().filter(|((_, _), c)| c.is_ascii_alphanumeric()).collect();
 
     // associate a set of points to each antenna type
     let mut antenna_types: HashMap<char, HashSet<Point>> = HashMap::new();

@@ -20,11 +20,7 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     column1.sort_unstable();
     column2.sort_unstable();
 
-    Ok(column1
-        .iter()
-        .zip(column2)
-        .map(|(a, b)| a.abs_diff(b))
-        .sum())
+    Ok(column1.iter().zip(column2).map(|(a, b)| a.abs_diff(b)).sum())
 }
 
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {

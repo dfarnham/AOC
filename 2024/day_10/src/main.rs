@@ -7,33 +7,19 @@ use std::io::{self, Write};
 
 fn get_grid(data: &[String]) -> Result<Matrix<i8>, Box<dyn Error>> {
     const RADIX: u32 = 10;
-    Ok(Matrix::from_rows(
-        data.iter().filter(|line| !line.is_empty()).map(|line| {
+    Ok(Matrix::from_rows(data.iter().filter(|line| !line.is_empty()).map(
+        |line| {
             line.chars()
-                .map(|c| {
-                    if c == '.' {
-                        -1
-                    } else {
-                        c.to_digit(RADIX).unwrap() as i8
-                    }
-                })
+                .map(|c| if c == '.' { -1 } else { c.to_digit(RADIX).unwrap() as i8 })
                 .collect::<Vec<_>>()
-        }),
-    )?)
+        },
+    ))?)
 }
 
 fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> {
     let grid = get_grid(puzzle_lines)?;
-    let starts: Vec<_> = grid
-        .items()
-        .filter(|(_, c)| **c == 0)
-        .map(|(p, _)| p)
-        .collect();
-    let ends: Vec<_> = grid
-        .items()
-        .filter(|(_, c)| **c == 9)
-        .map(|(p, _)| p)
-        .collect();
+    let starts: Vec<_> = grid.items().filter(|(_, c)| **c == 0).map(|(p, _)| p).collect();
+    let ends: Vec<_> = grid.items().filter(|(_, c)| **c == 9).map(|(p, _)| p).collect();
 
     let mut total = 0;
     for s in &starts {
@@ -61,16 +47,8 @@ fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> 
 #[allow(dead_code)]
 fn part1_orig(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let grid = get_grid(puzzle_lines)?;
-    let starts: Vec<_> = grid
-        .items()
-        .filter(|(_, c)| **c == 0)
-        .map(|(p, _)| p)
-        .collect();
-    let ends: Vec<_> = grid
-        .items()
-        .filter(|(_, c)| **c == 9)
-        .map(|(p, _)| p)
-        .collect();
+    let starts: Vec<_> = grid.items().filter(|(_, c)| **c == 0).map(|(p, _)| p).collect();
+    let ends: Vec<_> = grid.items().filter(|(_, c)| **c == 9).map(|(p, _)| p).collect();
 
     let mut total = 0;
     for s in &starts {

@@ -9,9 +9,7 @@ type Direction = (isize, isize);
 
 fn get_grid(data: &[String]) -> Result<Matrix<char>, Box<dyn Error>> {
     Ok(Matrix::from_rows(
-        data.iter()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.chars()),
+        data.iter().filter(|line| !line.is_empty()).map(|line| line.chars()),
     )?)
 }
 
@@ -50,11 +48,7 @@ fn part1(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
 fn part2(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
     let grid = get_grid(puzzle_lines)?;
     let start = grid.items().find(|((_, _), c)| **c == '^').unwrap().0;
-    let candidates: Vec<_> = grid
-        .items()
-        .filter(|(_, c)| **c == '.')
-        .map(|(p, _)| p)
-        .collect();
+    let candidates: Vec<_> = grid.items().filter(|(_, c)| **c == '.').map(|(p, _)| p).collect();
 
     let mut loop_count = 0;
 

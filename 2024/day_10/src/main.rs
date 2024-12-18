@@ -45,7 +45,7 @@ fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> 
 }
 
 #[allow(dead_code)]
-fn part1_orig(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
+fn solve_orig(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> {
     let grid = get_grid(puzzle_lines)?;
     let starts: Vec<_> = grid.items().filter(|(_, c)| **c == 0).map(|(p, _)| p).collect();
     let ends: Vec<_> = grid.items().filter(|(_, c)| **c == 9).map(|(p, _)| p).collect();
@@ -58,7 +58,9 @@ fn part1_orig(puzzle_lines: &[String]) -> Result<usize, Box<dyn Error>> {
             while let Some(p) = workq.pop_front() {
                 if p == *e {
                     total += 1;
-                    break;
+                    if !part2 {
+                        break;
+                    }
                 }
                 for neighbor in grid.neighbours(p, false) {
                     if grid[p] + 1 == grid[neighbor] {
@@ -111,7 +113,7 @@ mod tests {
     fn part1_example() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example")?;
         assert_eq!(solve(&puzzle_lines, false)?, 1);
-        assert_eq!(part1_orig(&puzzle_lines)?, 1);
+        assert_eq!(solve_orig(&puzzle_lines, false)?, 1);
         Ok(())
     }
 
@@ -119,7 +121,7 @@ mod tests {
     fn part1_example2() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example2")?;
         assert_eq!(solve(&puzzle_lines, false)?, 2);
-        assert_eq!(part1_orig(&puzzle_lines)?, 2);
+        assert_eq!(solve_orig(&puzzle_lines, false)?, 2);
         Ok(())
     }
 
@@ -127,7 +129,7 @@ mod tests {
     fn part1_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual")?;
         assert_eq!(solve(&puzzle_lines, false)?, 733);
-        assert_eq!(part1_orig(&puzzle_lines)?, 733);
+        assert_eq!(solve_orig(&puzzle_lines, false)?, 733);
         Ok(())
     }
 
@@ -135,6 +137,7 @@ mod tests {
     fn part2_example3() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example3")?;
         assert_eq!(solve(&puzzle_lines, true)?, 3);
+        assert_eq!(solve_orig(&puzzle_lines, true)?, 3);
         Ok(())
     }
 
@@ -142,6 +145,7 @@ mod tests {
     fn part2_example4() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example4")?;
         assert_eq!(solve(&puzzle_lines, true)?, 13);
+        assert_eq!(solve_orig(&puzzle_lines, true)?, 13);
         Ok(())
     }
 
@@ -149,6 +153,7 @@ mod tests {
     fn part2_example5() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example5")?;
         assert_eq!(solve(&puzzle_lines, true)?, 81);
+        assert_eq!(solve_orig(&puzzle_lines, true)?, 81);
         Ok(())
     }
 
@@ -156,6 +161,7 @@ mod tests {
     fn part2_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual")?;
         assert_eq!(solve(&puzzle_lines, true)?, 1514);
+        assert_eq!(solve_orig(&puzzle_lines, true)?, 1514);
         Ok(())
     }
 }

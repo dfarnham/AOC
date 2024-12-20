@@ -15,7 +15,7 @@ fn get_grid(data: &[String]) -> Result<Matrix<char>, Box<dyn Error>> {
     )?)
 }
 
-// return the cost of a neighbor (n) given a point (p) and the current direction (d)
+// return (direction, cost) of a neighbor (n) given a point (p) and the current direction (d)
 fn dir_cost(grid: &Matrix<char>, n: Point, p: Point, d: Direction) -> (Direction, usize) {
     match d == directions::N || d == directions::S {
         true => {
@@ -63,14 +63,11 @@ fn dfs(
         let score = s + cost;
         if score <= *best {
             if n == end {
-                #[allow(clippy::comparison_chain)]
-                if score == *best {
-                    all_best.extend(path_points.clone());
-                } else if score < *best {
+                if score < *best {
                     *best = score;
                     all_best.clear();
-                    all_best.extend(path_points.clone());
                 }
+                all_best.extend(path_points.clone());
             } else if !path_points.contains(&n) {
                 path_points.insert(n);
                 dfs(grid, direction, score, n, end, best, path_points, visited, all_best);

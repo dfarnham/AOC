@@ -17,7 +17,7 @@ fn get_grid(data: &[String]) -> Result<Matrix<char>, Box<dyn Error>> {
 
 // return (direction, cost) of a neighbor (n) given a point (p) and the current direction (d)
 fn dir_cost(grid: &Matrix<char>, n: Point, p: Point, d: Direction) -> (Direction, usize) {
-    match d == directions::N || d == directions::S {
+    match [directions::N, directions::S].contains(&d) {
         true => {
             if grid.move_in_direction(p, directions::W) == Some(n) {
                 (directions::W, 1001)
@@ -41,40 +41,72 @@ fn dir_cost(grid: &Matrix<char>, n: Point, p: Point, d: Direction) -> (Direction
 
 #[allow(clippy::too_many_arguments)]
 fn dfs(
-    grid: &Matrix<char>,                              // grid
-    d: Direction,                                     // current direction
-    s: usize,                                         // current total score
+    g: &Matrix<char>,                                 // grid
     p: Point,                                         // current point location
     end: Point,                                       // ending location
+    d: Direction,                                     // current direction
+    s: usize,                                         // current total score
     best: &mut usize,                                 // known best score
     path_points: &mut HashSet<Point>,                 // current set of points on journey to "end"
-    visited: &mut HashMap<(Point, Direction), usize>, // cache
-    all_best: &mut HashSet<Point>,                    // result holding all paths with "best" score
+    visited: &mut HashMap<(Point, Direction), usize>, // holds best scores for a point and direction
+    all_best: &mut HashSet<Point>,                    // all points in all paths with "best" score
 ) {
+    // if a previous score at this point/direction was lower then return
     if let Some(score) = visited.get(&(p, d)) {
         if *score < s {
             return;
         }
     }
+
+    // mark the score
     visited.insert((p, d), s);
 
-    for n in grid.neighbours(p, false).filter(|p| grid[*p] != '#') {
-        let (direction, cost) = dir_cost(grid, n, p, d);
+    // neighbors which aren't walls
+    for n in g.neighbours(p, false).filter(|p| g[*p] != '#') {
+        // get new direction and cost to move from: p -> n
+        let (direction, cost) = dir_cost(g, n, p, d);
+
+        // update the score
         let score = s + cost;
+
         if score <= *best {
+            // is this neighbor the endpoint
             if n == end {
                 if score < *best {
                     *best = score;
+                    // the old "best" points go away
                     all_best.clear();
                 }
+
+                // add the best points to the accumulating set
                 all_best.extend(path_points.clone());
             } else if !path_points.contains(&n) {
                 path_points.insert(n);
-                dfs(grid, direction, score, n, end, best, path_points, visited, all_best);
+                dfs(g, n, end, direction, score, best, path_points, visited, all_best);
                 path_points.remove(&n);
             }
         }
     }
+}
+
+fn solve_it(grid: &Matrix<char>, start: Point, end: Point) -> Result<(usize, HashSet<Point>), Box<dyn Error>> {
+    let mut best = usize::MAX;
+    let mut all_best = HashSet::new();
+
+    dfs(
+        grid,                // grid
+        start,               // starting position
+        end,                 // ending position
+        directions::E,       // starting direction
+        0,                   // current score
+        &mut best,           // known best score
+        &mut HashSet::new(), // storage for the current path points
+        &mut HashMap::new(), // storage for holding best scores for a point and direction
+        &mut all_best,       // result containing all points in "best" paths (excluding [start, end])
+    );
+    all_best.extend([start, end]);
+
+    Ok((best, all_best))
 }
 
 fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> {
@@ -82,22 +114,9 @@ fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> 
     let start = grid.items().find(|(_, c)| **c == 'S').unwrap().0;
     let end = grid.items().find(|(_, c)| **c == 'E').unwrap().0;
 
-    let mut best = usize::MAX;
-    let mut all_best = HashSet::new();
+    let (best, all_best) = solve_it(&grid, start, end)?;
 
-    dfs(
-        &grid,               // grid
-        directions::E,       // starting direction
-        0,                   // current score
-        start,               // starting position
-        end,                 // ending position
-        &mut best,           // known best score
-        &mut HashSet::new(), // contains current path
-        &mut HashMap::new(), // cache
-        &mut all_best,       // result containing all points in "best" paths (excluding [start, end])
-    );
-
-    Ok(if !part2 { best } else { all_best.len() + 2 })
+    Ok(if !part2 { best } else { all_best.len() })
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

@@ -1,0 +1,13 @@
+[package]
+name = "day_18"
+version = "0.1.0"
+authors = ["Dave Farnham <dave.farnham@icloud.com>"]
+categories = ["command-line-utilities"]
+description = "RAM Run: https://adventofcode.com/2024/day/18"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+general = { workspace = true }
+pathfinding = { workspace = true }

@@ -1,0 +1,22 @@
+Register A: 34615120
+Register B: 0
+Register C: 0
+
+Program: 2,4,  B = A % 8
+         1,5,  B ^= 5
+         7,5,  C = A / 2**B
+         1,6,  B ^= 6
+         0,3,  A /= 3
+         4,3,  B ^= C
+         5,5,  print(B % 8)
+         3,0   goto start if A != 0
+
+fn program(a: usize) -> Vec<usize> {
+    let mut a = a;
+    let mut output = vec![];
+    while a != 0 {
+        output.push(((a & 7) ^ 3 ^ (a >> ((a & 7) ^ 5))) & 7);
+        a /= 8;
+    }
+    output
+}

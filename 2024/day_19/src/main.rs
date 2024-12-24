@@ -14,6 +14,40 @@ fn get_data(data: &[String]) -> Result<(Vec<String>, Vec<String>), Box<dyn Error
     Ok((patterns, designs.to_vec()))
 }
 
+#[allow(dead_code)]
+// https://github.com/jonathanpaulson/AdventOfCode/blob/master/2024/19.py
+fn solve_better(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> {
+    let (patterns, designs) = get_data(puzzle_lines)?;
+
+    fn ways(patterns: &[String], design: &str, visited: &mut HashMap<String, usize>) -> usize {
+        if visited.contains_key(design) {
+            return visited[design];
+        }
+        let mut count = 0;
+        if design.is_empty() {
+            count = 1;
+        }
+        for pattern in patterns {
+            if design.starts_with(pattern) {
+                count += ways(patterns, &design[pattern.len()..], visited);
+            }
+        }
+        visited.insert(design.to_string(), count);
+        count
+    }
+
+    Ok(match part2 {
+        false => designs
+            .iter()
+            .filter(|design| ways(&patterns, design, &mut HashMap::new()) > 0)
+            .count(),
+        true => designs
+            .iter()
+            .map(|design| ways(&patterns, design, &mut HashMap::new()))
+            .sum(),
+    })
+}
+
 fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> {
     let (patterns, designs) = get_data(puzzle_lines)?;
 
@@ -41,7 +75,7 @@ fn solve(puzzle_lines: &[String], part2: bool) -> Result<usize, Box<dyn Error>> 
         false => designs.iter().filter(|design| is_valid(design)).count(),
         true => designs
             .iter()
-            // filter on valid designs
+            // filter on valid designs ( not required )
             .filter(|design| is_valid(design))
             .map(|design| {
                 // build a graph from the design; a map of indices => sets of indices
@@ -111,6 +145,7 @@ mod tests {
     fn part1_example() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example")?;
         assert_eq!(solve(&puzzle_lines, false)?, 6);
+        assert_eq!(solve_better(&puzzle_lines, false)?, 6);
         Ok(())
     }
 
@@ -118,6 +153,7 @@ mod tests {
     fn part1_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual")?;
         assert_eq!(solve(&puzzle_lines, false)?, 315);
+        assert_eq!(solve_better(&puzzle_lines, false)?, 315);
         Ok(())
     }
 
@@ -125,6 +161,7 @@ mod tests {
     fn part2_example() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-example")?;
         assert_eq!(solve(&puzzle_lines, true)?, 16);
+        assert_eq!(solve_better(&puzzle_lines, true)?, 16);
         Ok(())
     }
 
@@ -132,6 +169,7 @@ mod tests {
     fn part2_actual() -> Result<(), Box<dyn Error>> {
         let puzzle_lines = get_data("input-actual")?;
         assert_eq!(solve(&puzzle_lines, true)?, 625108891232249);
+        assert_eq!(solve_better(&puzzle_lines, true)?, 625108891232249);
         Ok(())
     }
 }

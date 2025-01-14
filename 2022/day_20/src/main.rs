@@ -15,23 +15,19 @@ fn solve(list: &[i64], offsets: &[usize], key: i64, rounds: usize) -> Result<i64
     // ex. a list of len 4 => [(3, 1), (0, 2), (1, 3), (2, 0)]
     let mut clist = (0..list.len())
         .map(|i| match i {
-            i if i == 0 => (list.len() - 1, i + 1),
-            i if i == list.len() - 1 => (i - 1, 0),
-            _ => (i - 1, i + 1),
+            _n @ 0 => (list.len() - 1, 1),
+            n if n == list.len() - 1 => (n - 1, 0),
+            n => (n - 1, n + 1),
         })
         .collect::<Vec<_>>();
 
-    // will be set to the index where value 0 is encountered
-    let mut zero_index = None;
-
     for _ in 0..rounds {
-        for (i, v) in list.iter().enumerate() {
-            if *v == 0 {
-                zero_index = Some(i);
-                continue;
-            }
-
-            let n = key * v;
+        for (i, n) in list
+            .iter()
+            .enumerate()
+            .filter(|(_, v)| **v != 0)
+            .map(|(i, v)| (i, *v * key))
+        {
             let mut new_index = i;
             for _ in 0..n.unsigned_abs() as usize % (list.len() - 1) {
                 new_index = match n > 0 {
@@ -60,18 +56,31 @@ fn solve(list: &[i64], offsets: &[usize], key: i64, rounds: usize) -> Result<i64
         }
     }
 
-    assert!(zero_index.is_some());
-    let mut index = zero_index.unwrap();
+    //  set to the index where value 0 was encountered
+    let zero_index = list.iter().position(|n| *n == 0).expect("zero index");
+
+    let mut index = zero_index;
+    let mut total = 0;
+    let inrange_offsets: Vec<_> = offsets.iter().map(|n| *n % clist.len()).collect();
+    for i in 0..clist.len() {
+        if inrange_offsets.contains(&i) {
+            total += list[index];
+        }
+        index = clist[index].1; // right
+    }
 
     // a bit wasteful but helped in viewing the reordered list
     // build a new list starting at the zero index following to the right
+    let mut index = zero_index;
     let mut olist = vec![];
     for _ in 0..clist.len() {
         olist.push(list[index]);
         index = clist[index].1; // right
     }
 
-    Ok(key * offsets.iter().map(|n| olist[*n % olist.len()]).sum::<i64>())
+    assert_eq!(total, offsets.iter().map(|n| olist[*n % olist.len()]).sum::<i64>());
+
+    Ok(key * total)
 }
 
 fn part1(puzzle_lines: &[String]) -> Result<i64, Box<dyn Error>> {
